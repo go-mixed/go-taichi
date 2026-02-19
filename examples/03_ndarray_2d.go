@@ -6,22 +6,22 @@ import (
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
-// 示例：2D 矩阵操作
-// 功能：创建、初始化、操作 2D NdArray
+// Example: 2D matrix operations
+// Features: Create, initialize, manipulate 2D NdArray
 
 func main() {
-	fmt.Println("=== 2D 矩阵操作示例 ===\n")
+	fmt.Println("=== 2D Matrix Operations Example ===\n")
 
-	// 创建运行时
+	// Create runtime
 	runtime, err := taichi.NewRuntimeAuto("")
 	if err != nil {
 		panic(err)
 	}
 	defer runtime.Release()
 
-	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
+	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// 创建 4x4 矩阵
+	// Create 4x4 matrix
 	matrix, err := taichi.NewNdArray2D(runtime, 4, 4, taichi.DataTypeF32)
 	if err != nil {
 		panic(err)
@@ -31,13 +31,13 @@ func main() {
 	shape := matrix.Shape()
 	rows, cols := shape[0], shape[1]
 
-	fmt.Printf("✅ 创建 2D 矩阵\n")
-	fmt.Printf("   形状: %dx%d\n", rows, cols)
-	fmt.Printf("   元素数: %d\n", matrix.TotalElements())
-	fmt.Printf("   数据类型: F32\n\n")
+	fmt.Printf("✅ Created 2D matrix\n")
+	fmt.Printf("   Shape: %dx%d\n", rows, cols)
+	fmt.Printf("   Elements: %d\n", matrix.TotalElements())
+	fmt.Printf("   Data type: F32\n\n")
 
-	// 初始化为单位矩阵
-	fmt.Println("--- 初始化为单位矩阵 ---")
+	// Initialize as identity matrix
+	fmt.Println("--- Initialize as Identity Matrix ---")
 	data, err := matrix.AsSliceFloat32()
 	if err != nil {
 		panic(err)
@@ -54,10 +54,10 @@ func main() {
 	}
 	matrix.Unmap()
 
-	fmt.Println("✅ 初始化完成\n")
+	fmt.Println("✅ Initialization complete\n")
 
-	// 读取并打印矩阵
-	fmt.Println("--- 矩阵内容 ---")
+	// Read and print matrix
+	fmt.Println("--- Matrix Content ---")
 	data, err = matrix.AsSliceFloat32()
 	if err != nil {
 		panic(err)
@@ -72,9 +72,9 @@ func main() {
 
 	matrix.Unmap()
 
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 要点：")
-	fmt.Println("   • 2D 数组在内存中是行优先存储")
-	fmt.Println("   • 索引计算: data[row*cols + col]")
-	fmt.Println("   • Shape() 返回 [rows, cols]")
+	fmt.Println("\n=== Example Complete ===")
+	fmt.Println("\n💡 Key Points:")
+	fmt.Println("   • 2D arrays are stored in row-major order")
+	fmt.Println("   • Index calculation: data[row*cols + col]")
+	fmt.Println("   • Shape() returns [rows, cols]")
 }

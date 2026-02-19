@@ -7,16 +7,16 @@ import (
 	"unsafe"
 )
 
-// 完整的结构体对齐验证工具
-// 用于验证 Go 结构体与 C 结构体的内存布局是否完全一致
+// Complete struct alignment verification tool
+// Used to verify that Go struct memory layout is completely consistent with C struct
 
 func main() {
-	fmt.Println("=== Go 结构体内存布局完整验证 ===")
-	fmt.Println("\n请编译并运行下方的 C 代码，对比输出是否一致")
+	fmt.Println("=== Go Struct Memory Layout Complete Verification ===")
+	fmt.Println("\nPlease compile and run the C code below, compare if output is consistent")
 	fmt.Println("\n" + strings.Repeat("=", 70) + "\n")
 
-	// ===== 基础类型 =====
-	printSection("基础类型")
+	// ===== Basic Types =====
+	printSection("Basic Types")
 	printBasicType("uintptr", unsafe.Sizeof(uintptr(0)), unsafe.Alignof(uintptr(0)))
 	printBasicType("uint32", unsafe.Sizeof(uint32(0)), unsafe.Alignof(uint32(0)))
 	printBasicType("uint64", unsafe.Sizeof(uint64(0)), unsafe.Alignof(uint64(0)))
@@ -24,7 +24,7 @@ func main() {
 	printBasicType("float32", unsafe.Sizeof(float32(0)), unsafe.Alignof(float32(0)))
 	printBasicType("*byte", unsafe.Sizeof((*byte)(nil)), unsafe.Alignof((*byte)(nil)))
 
-	// ===== 图像相关结构体 =====
+	// ===== Image Related Structs =====
 	printSection("TiImageExtent")
 	var imageExtent c_api.TiImageExtent
 	printStructInfo(unsafe.Sizeof(imageExtent), unsafe.Alignof(imageExtent))
@@ -59,7 +59,7 @@ func main() {
 	printField("Extent", unsafe.Offsetof(imgSlice.Extent))
 	printField("MipLevel", unsafe.Offsetof(imgSlice.MipLevel))
 
-	// ===== 采样器相关 =====
+	// ===== Sampler Related =====
 	printSection("TiSamplerCreateInfo")
 	var samplerInfo c_api.TiSamplerCreateInfo
 	printStructInfo(unsafe.Sizeof(samplerInfo), unsafe.Alignof(samplerInfo))
@@ -68,7 +68,7 @@ func main() {
 	printField("AddressMode", unsafe.Offsetof(samplerInfo.AddressMode))
 	printField("MaxAnisotropy", unsafe.Offsetof(samplerInfo.MaxAnisotropy))
 
-	// ===== 内存相关结构体 =====
+	// ===== Memory Related Structs =====
 	printSection("TiMemoryAllocateInfo")
 	var memAllocInfo c_api.TiMemoryAllocateInfo
 	printStructInfo(unsafe.Sizeof(memAllocInfo), unsafe.Alignof(memAllocInfo))
@@ -85,7 +85,7 @@ func main() {
 	printField("Offset", unsafe.Offsetof(memSlice.Offset))
 	printField("Size", unsafe.Offsetof(memSlice.Size))
 
-	// ===== 数组相关结构体 =====
+	// ===== Array Related Structs =====
 	printSection("TiNdShape")
 	var shape c_api.TiNdShape
 	printStructInfo(unsafe.Sizeof(shape), unsafe.Alignof(shape))
@@ -100,7 +100,7 @@ func main() {
 	printField("ElemShape", unsafe.Offsetof(ndarray.ElemShape))
 	printField("ElemType", unsafe.Offsetof(ndarray.ElemType))
 
-	// ===== 纹理相关 =====
+	// ===== Texture Related =====
 	printSection("TiTexture")
 	var texture c_api.TiTexture
 	printStructInfo(unsafe.Sizeof(texture), unsafe.Alignof(texture))
@@ -110,12 +110,12 @@ func main() {
 	printField("Extent", unsafe.Offsetof(texture.Extent))
 	printField("Format", unsafe.Offsetof(texture.Format))
 
-	// ===== 标量相关 =====
+	// ===== Scalar Related =====
 	printSection("TiScalarValue (Union)")
 	var scalarVal c_api.TiScalarValue
 	printStructInfo(unsafe.Sizeof(scalarVal), unsafe.Alignof(scalarVal))
 	printField("Data", unsafe.Offsetof(scalarVal.Data))
-	fmt.Println("  注意：Union 大小应等于最大成员 (8 bytes: i64/f64)")
+	fmt.Println("  Note: Union size should equal largest member (8 bytes: i64/f64)")
 
 	printSection("TiScalar")
 	var scalar c_api.TiScalar
@@ -123,15 +123,15 @@ func main() {
 	printField("Type", unsafe.Offsetof(scalar.Type))
 	printField("Value", unsafe.Offsetof(scalar.Value))
 	if unsafe.Sizeof(scalar) == 12 {
-		fmt.Println("  ⚠️  警告：大小为 12 bytes，可能需要 padding 到 16 bytes")
+		fmt.Println("  ⚠️  Warning: Size is 12 bytes, may need padding to 16 bytes")
 	}
 
-	// ===== 参数相关 =====
+	// ===== Argument Related =====
 	printSection("TiArgumentValue (Union)")
 	var argVal c_api.TiArgumentValue
 	printStructInfo(unsafe.Sizeof(argVal), unsafe.Alignof(argVal))
 	printField("Data", unsafe.Offsetof(argVal.Data))
-	fmt.Println("  注意：Union 大小应等于最大成员 TiNdArray (152 bytes)")
+	fmt.Println("  Note: Union size should equal largest member TiNdArray (152 bytes)")
 
 	printSection("TiArgument")
 	var arg c_api.TiArgument
@@ -139,9 +139,9 @@ func main() {
 	printField("Type", unsafe.Offsetof(arg.Type))
 	printField("Value", unsafe.Offsetof(arg.Value))
 	if unsafe.Offsetof(arg.Value) == 8 {
-		fmt.Println("  ✅ Type 和 Value 之间有 4 bytes padding")
+		fmt.Println("  ✅ 4 bytes padding between Type and Value")
 	} else {
-		fmt.Println("  ❌ 警告：Value offset 不是 8，可能缺少 padding")
+		fmt.Println("  ❌ Warning: Value offset is not 8, may be missing padding")
 	}
 
 	printSection("TiNamedArgument")
@@ -150,12 +150,12 @@ func main() {
 	printField("Name", unsafe.Offsetof(namedArg.Name))
 	printField("Argument", unsafe.Offsetof(namedArg.Argument))
 
-	// ===== 数据完整性测试 =====
-	printSection("数据完整性测试")
+	// ===== Data Integrity Test =====
+	printSection("Data Integrity Test")
 	testDataIntegrity()
 
-	// ===== 原始字节检查 =====
-	printSection("原始字节检查 - TiArgument 前 32 bytes")
+	// ===== Raw Byte Check =====
+	printSection("Raw Byte Check - TiArgument first 32 bytes")
 	testArg := c_api.TiArgument{
 		Type: c_api.TI_ARGUMENT_TYPE_NDARRAY,
 	}
@@ -178,22 +178,22 @@ func main() {
 		if i == 0 {
 			fmt.Printf(" <- Type (4 bytes) + Padding (4 bytes)")
 		} else if i == 16 {
-			fmt.Printf(" <- Memory 的一部分")
+			fmt.Printf(" <- Part of Memory")
 		}
 		fmt.Println()
 	}
 
-	// ===== 总结 =====
+	// ===== Summary =====
 	fmt.Println("\n" + strings.Repeat("=", 70))
-	fmt.Println("\n=== 验证完成 ===")
-	fmt.Println("\n如果所有大小和偏移量与 C 版本一致，则说明内存布局正确。")
-	fmt.Println("\n⚠️  特别注意以下结构体：")
-	fmt.Println("   • TiScalar - 检查是否需要 padding")
-	fmt.Println("   • TiArgument - 确认 Value offset 为 8")
-	fmt.Println("   • TiNdArray - 确认 ElemShape offset 为 76")
+	fmt.Println("\n=== Verification Complete ===")
+	fmt.Println("\nIf all sizes and offsets match the C version, the memory layout is correct.")
+	fmt.Println("\n⚠️  Pay special attention to these structs:")
+	fmt.Println("   • TiScalar - check if padding is needed")
+	fmt.Println("   • TiArgument - confirm Value offset is 8")
+	fmt.Println("   • TiNdArray - confirm ElemShape offset is 76")
 }
 
-// 辅助函数
+// Helper functions
 func printSection(name string) {
 	fmt.Printf("\n【%s】\n", name)
 }
@@ -234,21 +234,21 @@ func testDataIntegrity() {
 	// 读回验证
 	readBack := *(*c_api.TiNdArray)(unsafe.Pointer(&testArg.Value.Data[0]))
 
-	fmt.Printf("  原始 Memory:    0x%X\n", testNdArray.Memory)
-	fmt.Printf("  读回 Memory:    0x%X\n", readBack.Memory)
-	fmt.Printf("  原始 DimCount:  %d\n", testNdArray.Shape.DimCount)
-	fmt.Printf("  读回 DimCount:  %d\n", readBack.Shape.DimCount)
-	fmt.Printf("  原始 Dims[0]:   %d\n", testNdArray.Shape.Dims[0])
-	fmt.Printf("  读回 Dims[0]:   %d\n", readBack.Shape.Dims[0])
-	fmt.Printf("  原始 ElemType:  %d\n", testNdArray.ElemType)
-	fmt.Printf("  读回 ElemType:  %d\n", readBack.ElemType)
+	fmt.Printf("  Original Memory:    0x%X\n", testNdArray.Memory)
+	fmt.Printf("  Read back Memory:   0x%X\n", readBack.Memory)
+	fmt.Printf("  Original DimCount:  %d\n", testNdArray.Shape.DimCount)
+	fmt.Printf("  Read back DimCount: %d\n", readBack.Shape.DimCount)
+	fmt.Printf("  Original Dims[0]:   %d\n", testNdArray.Shape.Dims[0])
+	fmt.Printf("  Read back Dims[0]:  %d\n", readBack.Shape.Dims[0])
+	fmt.Printf("  Original ElemType:  %d\n", testNdArray.ElemType)
+	fmt.Printf("  Read back ElemType: %d\n", readBack.ElemType)
 
 	if readBack.Memory == testNdArray.Memory &&
 		readBack.Shape.DimCount == testNdArray.Shape.DimCount &&
 		readBack.Shape.Dims[0] == testNdArray.Shape.Dims[0] &&
 		readBack.ElemType == testNdArray.ElemType {
-		fmt.Println("\n  ✅ 数据完整性测试通过！")
+		fmt.Println("\n  ✅ Data integrity test passed!")
 	} else {
-		fmt.Println("\n  ❌ 数据完整性测试失败！")
+		fmt.Println("\n  ❌ Data integrity test failed!")
 	}
 }

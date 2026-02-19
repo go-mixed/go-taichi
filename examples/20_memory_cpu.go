@@ -7,72 +7,72 @@ import (
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
-// 示例：CPU 内存导入
-// 功能：将 Go 切片内存导入到 Taichi，避免数据复制
+// Example: CPU Memory Import
+// Features: Import Go slice memory into Taichi, avoid data copying
 
 func main() {
-	fmt.Println("=== CPU 内存导入示例 ===\n")
+	fmt.Println("=== CPU Memory Import Example ===\n")
 
-	// 创建运行时
+	// Create runtime
 	runtime, err := taichi.NewRuntimeAuto("")
 	if err != nil {
 		panic(err)
 	}
 	defer runtime.Release()
 
-	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
+	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// 创建 Go 切片
+	// Create Go slice
 	data := make([]float32, 1000)
 	for i := range data {
 		data[i] = float32(i) * 0.5
 	}
 
-	fmt.Printf("✅ 创建 Go 切片: %d 个元素\n", len(data))
-	fmt.Printf("   内存大小: %d bytes\n", len(data)*4)
-	fmt.Printf("   内存地址: %p\n\n", &data[0])
+	fmt.Printf("✅ Created Go slice: %d elements\n", len(data))
+	fmt.Printf("   Memory size: %d bytes\n", len(data)*4)
+	fmt.Printf("   Memory address: %p\n\n", &data[0])
 
-	// 导入 CPU 内存
-	fmt.Println("--- 导入内存到 Taichi ---")
+	// Import CPU memory
+	fmt.Println("--- Import Memory to Taichi ---")
 	memory, err := taichi.ImportCPUMemory(runtime, unsafe.Pointer(&data[0]), uint64(len(data)*4))
 	if err != nil {
-		fmt.Printf("❌ CPU 内存导入失败: %v\n", err)
-		fmt.Println("\n⚠️  某些后端不支持 CPU 内存导入")
-		fmt.Println("   支持的后端: CPU (x64/ARM64)")
-		fmt.Println("   不支持的后端: Vulkan, CUDA, OpenGL")
+		fmt.Printf("❌ CPU memory import failed: %v\n", err)
+		fmt.Println("\n⚠️  Some backends do not support CPU memory import")
+		fmt.Println("   Supported backends: CPU (x64/ARM64)")
+		fmt.Println("   Unsupported backends: Vulkan, CUDA, OpenGL")
 		return
 	}
 	defer memory.Release()
 
-	fmt.Printf("✅ 成功导入 CPU 内存\n")
-	fmt.Printf("   大小: %d bytes\n\n", memory.Size())
+	fmt.Printf("✅ Successfully imported CPU memory\n")
+	fmt.Printf("   Size: %d bytes\n\n", memory.Size())
 
-	// 从导入的内存创建 NdArray
-	fmt.Println("--- 创建 NdArray ---")
+	// Create NdArray from imported memory
+	fmt.Println("--- Create NdArray ---")
 	arr, err := taichi.NewNdArray1DFromMemory(memory, uint32(len(data)), taichi.DataTypeF32)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("✅ 创建 NdArray\n")
-	fmt.Printf("   形状: %v\n", arr.Shape())
-	fmt.Printf("   元素数: %d\n\n", arr.TotalElements())
+	fmt.Printf("✅ Created NdArray\n")
+	fmt.Printf("   Shape: %v\n", arr.Shape())
+	fmt.Printf("   Element count: %d\n\n", arr.TotalElements())
 
-	// 注意事项
-	fmt.Println("--- 注意事项 ---")
-	fmt.Println("⚠️  导入的内存可能无法直接映射")
-	fmt.Println("   • 导入的内存主要用于与 Taichi kernel 交互")
-	fmt.Println("   • 不一定支持 AsSliceXXX() 映射")
-	fmt.Println("   • 数据修改会直接影响原始 Go 切片")
+	// Notes
+	fmt.Println("--- Notes ---")
+	fmt.Println("⚠️  Imported memory may not be directly mappable")
+	fmt.Println("   • Imported memory is mainly for interacting with Taichi kernels")
+	fmt.Println("   • May not support AsSliceXXX() mapping")
+	fmt.Println("   • Data modifications directly affect original Go slice")
 
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 要点：")
-	fmt.Println("   • ImportCPUMemory() 导入现有内存")
-	fmt.Println("   • 避免数据复制，提高性能")
-	fmt.Println("   • 导入的内存生命周期必须超过 Memory 对象")
-	fmt.Println("   • 仅 CPU 后端支持")
-	fmt.Println("\n⚡ 使用场景：")
-	fmt.Println("   • 与现有 Go 代码集成")
-	fmt.Println("   • 大数据量避免复制")
-	fmt.Println("   • 零拷贝数据传输")
+	fmt.Println("\n=== Example Complete ===")
+	fmt.Println("\n💡 Key Points:")
+	fmt.Println("   • ImportCPUMemory() imports existing memory")
+	fmt.Println("   • Avoid data copying, improve performance")
+	fmt.Println("   • Imported memory lifetime must exceed Memory object")
+	fmt.Println("   • Only CPU backend supported")
+	fmt.Println("\n⚡ Use Cases:")
+	fmt.Println("   • Integration with existing Go code")
+	fmt.Println("   • Avoid copying large data volumes")
+	fmt.Println("   • Zero-copy data transfer")
 }

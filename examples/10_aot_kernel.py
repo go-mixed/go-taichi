@@ -6,13 +6,13 @@
 # ]
 # ///
 """
-AOT Kernel 生成器 - 为 10_aot_kernel.go 生成 TCM 模块
+AOT Kernel Generator - Generate TCM module for 10_aot_kernel.go
 
-生成一个简单的加法 kernel：c = a + b
+Generates a simple addition kernel: c = a + b
 
-使用方法:
+Usage:
     python 10_aot_kernel.py
-    或
+    or
     uv run 10_aot_kernel.py
 """
 
@@ -25,43 +25,43 @@ def add_kernel(
     c: ti.types.ndarray(dtype=ti.f32, ndim=1),
 ):
     """
-    向量加法 kernel: c = a + b
+    Vector addition kernel: c = a + b
 
     Args:
-        a: 输入数组 A
-        b: 输入数组 B
-        c: 输出数组 C
+        a: Input array A
+        b: Input array B
+        c: Output array C
     """
     for i in c:
         c[i] = a[i] + b[i]
 
 
 def main():
-    """主函数"""
-    print(f"Taichi {ti.__version__} AOT 模块生成器")
-    print("目标架构: Vulkan")
+    """Main function"""
+    print(f"Taichi {ti.__version__} AOT Module Generator")
+    print("Target architecture: Vulkan")
     print()
 
     try:
-        # 初始化 Taichi (Vulkan 后端)
+        # Initialize Taichi (Vulkan backend)
         ti.init(arch=ti.vulkan)
 
-        # 创建 AOT 模块
+        # Create AOT module
         m = ti.aot.Module(ti.vulkan)
 
-        # 添加 kernel
-        print(f"添加 kernel: add_kernel")
+        # Add kernel
+        print(f"Adding kernel: add_kernel")
         m.add_kernel(add_kernel)
 
-        # 保存为 TCM 文件
+        # Save as TCM file
         output_file = "aot_module.tcm"
         m.archive(output_file)
 
-        print(f"\n✅ {output_file} 生成成功!")
-        print(f"\n现在可以运行: go run 10_aot_kernel.go")
+        print(f"\n✅ {output_file} generated successfully!")
+        print(f"\nNow you can run: go run 10_aot_kernel.go")
 
     except Exception as e:
-        print(f"\n❌ 生成失败: {e}")
+        print(f"\n❌ Generation failed: {e}")
         import traceback
         traceback.print_exc()
         return 1

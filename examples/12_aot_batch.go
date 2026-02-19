@@ -6,47 +6,47 @@ import (
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
-// 示例：AOT Kernel 批量执行
-// 功能：批量提交多个异步任务，充分利用 GPU 并行能力
+// Example: AOT Kernel Batch Execution
+// Features: Submit multiple asynchronous tasks in batch, fully utilize GPU parallel capabilities
 
 func main() {
-	fmt.Println("=== AOT Kernel 批量执行 ===\n")
+	fmt.Println("=== AOT Kernel Batch Execution ===\n")
 
-	// 创建运行时
+	// Create runtime
 	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
 	if err != nil {
 		panic(err)
 	}
 	defer runtime.Release()
 
-	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
+	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// 加载 AOT 模块
+	// Load AOT module
 	module, err := taichi.LoadAotModule(runtime, "./examples/10_aot_module.tcm")
 	if err != nil {
-		fmt.Printf("❌ 加载 AOT 模块失败: %v\n", err)
-		fmt.Println("\n请先运行以下命令生成 AOT 模块： uv run ./examples/10_aot_kenerl.py")
+		fmt.Printf("❌ Failed to load AOT module: %v\n", err)
+		fmt.Println("\nPlease run the following command to generate AOT module: uv run ./examples/10_aot_kenerl.py")
 		return
 	}
 	defer module.Release()
 
-	// 获取 kernel
+	// Get kernel
 	kernel, err := module.GetKernel("add_kernel")
 	if err != nil {
-		fmt.Printf("❌ 获取 kernel 失败: %v\n", err)
+		fmt.Printf("❌ Failed to get kernel: %v\n", err)
 		return
 	}
 
-	fmt.Println("✅ AOT 模块和 Kernel 加载成功\n")
+	fmt.Println("✅ AOT module and kernel loaded successfully\n")
 
-	// 创建输入数据
+	// Create input data
 	n := uint32(100)
 	a, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
 	b, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
 	defer a.Release()
 	defer b.Release()
 
-	// 初始化输入数据
+	// Initialize input data
 	dataA, _ := a.AsSliceFloat32()
 	dataB, _ := b.AsSliceFloat32()
 	for i := range dataA {
@@ -56,7 +56,7 @@ func main() {
 	a.Unmap()
 	b.Unmap()
 
-	// 创建多个输出数组
+	// Create multiple output arrays
 	batchSize := 5
 	results := make([]*taichi.NdArray, batchSize)
 	for i := 0; i < batchSize; i++ {
@@ -64,42 +64,42 @@ func main() {
 		defer results[i].Release()
 	}
 
-	fmt.Printf("✅ 准备批量执行 %d 个任务\n\n", batchSize)
+	fmt.Printf("✅ Prepared for batch execution of %d tasks\n\n", batchSize)
 
-	// 批量提交任务
-	fmt.Println("--- 批量提交任务 ---")
+	// Submit tasks in batch
+	fmt.Println("--- Submitting Tasks in Batch ---")
 	for i := 0; i < batchSize; i++ {
 		kernel.Launch().
 			ArgNdArray(a).
 			ArgNdArray(b).
 			ArgNdArray(results[i]).
 			RunAsync()
-		fmt.Printf("✅ 任务 %d 已提交\n", i+1)
+		fmt.Printf("✅ Task %d submitted\n", i+1)
 	}
 
-	fmt.Printf("\n✅ 已提交 %d 个异步任务\n", batchSize)
+	fmt.Printf("\n✅ Submitted %d asynchronous tasks\n", batchSize)
 
-	// 等待所有任务完成
-	fmt.Println("\n--- 等待所有任务完成 ---")
+	// Wait for all tasks to complete
+	fmt.Println("\n--- Waiting for All Tasks to Complete ---")
 	runtime.Wait()
-	fmt.Println("✅ 所有任务执行完成")
+	fmt.Println("✅ All tasks completed")
 
-	// 验证结果
-	fmt.Println("\n--- 验证结果 ---")
+	// Verify results
+	fmt.Println("\n--- Verifying Results ---")
 	for i := 0; i < batchSize; i++ {
 		data, _ := results[i].AsSliceFloat32()
-		fmt.Printf("结果 %d 前3个: [%.1f, %.1f, %.1f]\n", i+1, data[0], data[1], data[2])
+		fmt.Printf("Result %d first 3: [%.1f, %.1f, %.1f]\n", i+1, data[0], data[1], data[2])
 		results[i].Unmap()
 	}
 
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 要点：")
-	fmt.Println("   • 批量提交多个异步任务")
-	fmt.Println("   • GPU 可以并行执行多个任务")
-	fmt.Println("   • 一次 Wait() 等待所有任务")
-	fmt.Println("   • 适合大规模并行计算")
-	fmt.Println("\n⚡ 性能优势：")
-	fmt.Println("   • 减少 CPU-GPU 同步开销")
-	fmt.Println("   • 充分利用 GPU 并行能力")
-	fmt.Println("   • 提高整体吞吐量")
+	fmt.Println("\n=== Example Complete ===")
+	fmt.Println("\n💡 Key Points:")
+	fmt.Println("   • Submit multiple asynchronous tasks in batch")
+	fmt.Println("   • GPU can execute multiple tasks in parallel")
+	fmt.Println("   • Single Wait() waits for all tasks")
+	fmt.Println("   • Suitable for large-scale parallel computing")
+	fmt.Println("\n⚡ Performance Benefits:")
+	fmt.Println("   • Reduce CPU-GPU synchronization overhead")
+	fmt.Println("   • Fully utilize GPU parallel capabilities")
+	fmt.Println("   • Improve overall throughput")
 }

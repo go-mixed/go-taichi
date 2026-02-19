@@ -6,62 +6,62 @@ import (
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
-// 示例：图像基础操作
-// 功能：创建图像、布局转换、查询属性
+// Example: Basic Image Operations
+// Features: Create images, layout transitions, query properties
 
 func main() {
-	fmt.Println("=== 图像基础操作示例 ===\n")
+	fmt.Println("=== Basic Image Operations Example ===\n")
 
-	// 创建运行时
+	// Create runtime
 	runtime, err := taichi.NewRuntimeAuto("")
 	if err != nil {
 		panic(err)
 	}
 	defer runtime.Release()
 
-	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
+	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// 创建 512x512 RGBA8 图像
+	// Create 512x512 RGBA8 image
 	img, err := taichi.NewImage2D(runtime, 512, 512, taichi.FormatRgba8)
 	if err != nil {
 		panic(err)
 	}
 	defer img.Release()
 
-	fmt.Printf("✅ 创建图像\n")
-	fmt.Printf("   尺寸: %dx%d\n", img.Width(), img.Height())
-	fmt.Printf("   格式: RGBA8\n")
-	fmt.Printf("   通道数: 4\n\n")
+	fmt.Printf("✅ Image created\n")
+	fmt.Printf("   Size: %dx%d\n", img.Width(), img.Height())
+	fmt.Printf("   Format: RGBA8\n")
+	fmt.Printf("   Channels: 4\n\n")
 
-	// 布局转换示例
-	fmt.Println("--- 布局转换 ---")
+	// Layout transition examples
+	fmt.Println("--- Layout Transitions ---")
 
-	// 转换为 Shader 写入布局
+	// Transition to shader write layout
 	img.TransitionLayout(taichi.ImageLayoutShaderWrite)
-	fmt.Println("✅ 转换为 ShaderWrite 布局")
+	fmt.Println("✅ Transitioned to ShaderWrite layout")
 
-	// 转换为 Shader 读取布局
+	// Transition to shader read layout
 	img.TransitionLayout(taichi.ImageLayoutShaderRead)
-	fmt.Println("✅ 转换为 ShaderRead 布局")
+	fmt.Println("✅ Transitioned to ShaderRead layout")
 
-	// 转换为传输目标布局
+	// Transition to transfer destination layout
 	img.TransitionLayout(taichi.ImageLayoutTransferDst)
-	fmt.Println("✅ 转换为 TransferDst 布局")
+	fmt.Println("✅ Transitioned to TransferDst layout")
 
-	// 转换为传输源布局
+	// Transition to transfer source layout
 	img.TransitionLayout(taichi.ImageLayoutTransferSrc)
-	fmt.Println("✅ 转换为 TransferSrc 布局")
+	fmt.Println("✅ Transitioned to TransferSrc layout")
 
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 要点：")
-	fmt.Println("   • 图像布局必须与操作匹配")
-	fmt.Println("   • ShaderWrite - 用于 Shader 写入")
-	fmt.Println("   • ShaderRead - 用于 Shader 读取")
-	fmt.Println("   • TransferDst - 用于接收数据")
-	fmt.Println("   • TransferSrc - 用于发送数据")
-	fmt.Println("\n📚 常用格式：")
-	fmt.Println("   • RGBA8 - 8位RGBA (常用)")
-	fmt.Println("   • RGBA16F - 16位浮点RGBA")
-	fmt.Println("   • RGBA32F - 32位浮点RGBA")
-	fmt.Println("   • R32F - 32位浮点单通道")
+	fmt.Println("\n=== Example Complete ===")
+	fmt.Println("\n💡 Key Points:")
+	fmt.Println("   • Image layout must match the operation")
+	fmt.Println("   • ShaderWrite - for shader writes")
+	fmt.Println("   • ShaderRead - for shader reads")
+	fmt.Println("   • TransferDst - for receiving data")
+	fmt.Println("   • TransferSrc - for sending data")
+	fmt.Println("\n📚 Common Formats:")
+	fmt.Println("   • RGBA8 - 8-bit RGBA (common)")
+	fmt.Println("   • RGBA16F - 16-bit float RGBA")
+	fmt.Println("   • RGBA32F - 32-bit float RGBA")
+	fmt.Println("   • R32F - 32-bit float single channel")
 }

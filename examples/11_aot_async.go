@@ -6,40 +6,40 @@ import (
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
-// 示例：AOT Kernel 异步执行
-// 功能：使用 RunAsync() 异步执行 Kernel，使用 Wait() 等待完成
+// Example: AOT Kernel Asynchronous Execution
+// Features: Use RunAsync() to execute kernel asynchronously, use Wait() to wait for completion
 
 func main() {
-	fmt.Println("=== AOT Kernel 异步执行 ===\n")
+	fmt.Println("=== AOT Kernel Asynchronous Execution ===\n")
 
-	// 创建运行时
+	// Create runtime
 	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
 	if err != nil {
 		panic(err)
 	}
 	defer runtime.Release()
 
-	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
+	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// 加载 AOT 模块
+	// Load AOT module
 	module, err := taichi.LoadAotModule(runtime, "./examples/10_aot_module.tcm")
 	if err != nil {
-		fmt.Printf("❌ 加载 AOT 模块失败: %v\n", err)
-		fmt.Println("\n请先运行以下命令生成 AOT 模块： uv run ./examples/10_aot_kenerl.py")
+		fmt.Printf("❌ Failed to load AOT module: %v\n", err)
+		fmt.Println("\nPlease run the following command to generate AOT module: uv run ./examples/10_aot_kenerl.py")
 		return
 	}
 	defer module.Release()
 
-	// 获取 kernel
+	// Get kernel
 	kernel, err := module.GetKernel("add_kernel")
 	if err != nil {
-		fmt.Printf("❌ 获取 kernel 失败: %v\n", err)
+		fmt.Printf("❌ Failed to get kernel: %v\n", err)
 		return
 	}
 
-	fmt.Println("✅ AOT 模块和 Kernel 加载成功\n")
+	fmt.Println("✅ AOT module and kernel loaded successfully\n")
 
-	// 创建测试数据
+	// Create test data
 	n := uint32(100)
 	a, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
 	b, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
@@ -48,7 +48,7 @@ func main() {
 	defer b.Release()
 	defer c.Release()
 
-	// 初始化数据
+	// Initialize data
 	dataA, _ := a.AsSliceFloat32()
 	dataB, _ := b.AsSliceFloat32()
 	for i := range dataA {
@@ -58,34 +58,34 @@ func main() {
 	a.Unmap()
 	b.Unmap()
 
-	fmt.Println("✅ 测试数据准备完成")
+	fmt.Println("✅ Test data prepared")
 
-	// 异步执行 kernel
-	fmt.Println("\n--- 异步执行 ---")
+	// Execute kernel asynchronously
+	fmt.Println("\n--- Asynchronous Execution ---")
 	kernel.Launch().
 		ArgNdArray(a).
 		ArgNdArray(b).
 		ArgNdArray(c).
 		RunAsync()
 
-	fmt.Println("✅ 异步任务已提交")
-	fmt.Println("   (可以继续执行其他操作...)")
+	fmt.Println("✅ Asynchronous task submitted")
+	fmt.Println("   (Can continue with other operations...)")
 
-	// 等待完成
-	fmt.Println("\n--- 等待任务完成 ---")
+	// Wait for completion
+	fmt.Println("\n--- Waiting for Task Completion ---")
 	runtime.Wait()
-	fmt.Println("✅ 异步任务执行完成")
+	fmt.Println("✅ Asynchronous task completed")
 
-	// 检查结果
+	// Check results
 	dataC, _ := c.AsSliceFloat32()
-	fmt.Printf("\n前5个结果: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
+	fmt.Printf("\nFirst 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
 		dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
 	c.Unmap()
 
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 要点：")
-	fmt.Println("   • RunAsync() 异步提交任务")
-	fmt.Println("   • 提交后立即返回，不阻塞")
-	fmt.Println("   • runtime.Wait() 等待所有任务完成")
-	fmt.Println("   • 适合 CPU 和 GPU 并行工作")
+	fmt.Println("\n=== Example Complete ===")
+	fmt.Println("\n💡 Key Points:")
+	fmt.Println("   • RunAsync() submits task asynchronously")
+	fmt.Println("   • Returns immediately after submission, non-blocking")
+	fmt.Println("   • runtime.Wait() waits for all tasks to complete")
+	fmt.Println("   • Suitable for CPU and GPU parallel work")
 }

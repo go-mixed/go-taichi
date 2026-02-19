@@ -1,9 +1,8 @@
 // ============================================================
-// C 结构体验证代码
+// Verify memory layout of C structures
 // ============================================================
-// 将此代码保存为 verify_structs.c
-// 编译命令：gcc -I../taichi/c_api/include .\99_struct_alignment.c -o verify_structs
-// 运行：./verify_structs
+// Compile: gcc -I../taichi/c_api/include .\99_struct_alignment.c -o verify_structs
+// Run: ./verify_structs
 // ============================================================
 
 #include <stdio.h>
@@ -16,11 +15,11 @@
 #define PRINT_FIELD(type, field) printf("  %-20s offset: %3zu\n", #field, offsetof(type, field))
 
 int main() {
-    printf("=== C 结构体内存布局完整验证 ===\n");
+    printf("=== Verify memory layout of C structures ===\n");
     printf("\n======================================================================\n");
 
-    // 基础类型
-    PRINT_SECTION("基础类型");
+    // Basic Types
+    PRINT_SECTION("Basic Types");
     PRINT_BASIC("uintptr", void*);
     PRINT_BASIC("uint32", uint32_t);
     PRINT_BASIC("uint64", uint64_t);
@@ -28,7 +27,7 @@ int main() {
     PRINT_BASIC("float32", float);
     PRINT_BASIC("*byte", char*);
 
-    // 图像相关
+    // Image related
     PRINT_SECTION("TiImageExtent");
     PRINT_STRUCT(TiImageExtent);
     PRINT_FIELD(TiImageExtent, width);
@@ -59,7 +58,7 @@ int main() {
     PRINT_FIELD(TiImageSlice, extent);
     PRINT_FIELD(TiImageSlice, mip_level);
 
-    // 采样器
+    // Sampler
     PRINT_SECTION("TiSamplerCreateInfo");
     PRINT_STRUCT(TiSamplerCreateInfo);
     PRINT_FIELD(TiSamplerCreateInfo, mag_filter);
@@ -67,7 +66,7 @@ int main() {
     PRINT_FIELD(TiSamplerCreateInfo, address_mode);
     PRINT_FIELD(TiSamplerCreateInfo, max_anisotropy);
 
-    // 内存相关
+    // Memory related
     PRINT_SECTION("TiMemoryAllocateInfo");
     PRINT_STRUCT(TiMemoryAllocateInfo);
     PRINT_FIELD(TiMemoryAllocateInfo, size);
@@ -82,7 +81,7 @@ int main() {
     PRINT_FIELD(TiMemorySlice, offset);
     PRINT_FIELD(TiMemorySlice, size);
 
-    // 数组相关
+    // Array related
     PRINT_SECTION("TiNdShape");
     PRINT_STRUCT(TiNdShape);
     PRINT_FIELD(TiNdShape, dim_count);
@@ -95,7 +94,7 @@ int main() {
     PRINT_FIELD(TiNdArray, elem_shape);
     PRINT_FIELD(TiNdArray, elem_type);
 
-    // 纹理
+    // Texture
     PRINT_SECTION("TiTexture");
     PRINT_STRUCT(TiTexture);
     PRINT_FIELD(TiTexture, image);
@@ -104,30 +103,30 @@ int main() {
     PRINT_FIELD(TiTexture, extent);
     PRINT_FIELD(TiTexture, format);
 
-    // 标量
+    // Scalar
     PRINT_SECTION("TiScalarValue (Union)");
     PRINT_STRUCT(TiScalarValue);
-    printf("  注意：Union 大小应等于最大成员 (8 bytes: i64/f64)\n");
+    printf("  Note: Union size should equal largest member (8 bytes: i64/f64)\n");
 
     PRINT_SECTION("TiScalar");
     PRINT_STRUCT(TiScalar);
     PRINT_FIELD(TiScalar, type);
     PRINT_FIELD(TiScalar, value);
     if (sizeof(TiScalar) == 12) {
-        printf("  ⚠️  警告：大小为 12 bytes，可能需要 padding 到 16 bytes\n");
+        printf("  ⚠️  Warning: Size is 12 bytes, may need padding to 16 bytes\n");
     }
 
-    // 参数
+    // Arguments
     PRINT_SECTION("TiArgumentValue (Union)");
     PRINT_STRUCT(TiArgumentValue);
-    printf("  注意：Union 大小应等于最大成员 TiNdArray (152 bytes)\n");
+    printf("  Note: Union size should equal largest member TiNdArray (152 bytes)\n");
 
     PRINT_SECTION("TiArgument");
     PRINT_STRUCT(TiArgument);
     PRINT_FIELD(TiArgument, type);
     PRINT_FIELD(TiArgument, value);
     if (offsetof(TiArgument, value) == 8) {
-        printf("  ✅ Type 和 Value 之间有 4 bytes padding\n");
+        printf("  ✅ 4 bytes padding between Type and Value\n");
     }
 
     PRINT_SECTION("TiNamedArgument");
@@ -136,6 +135,6 @@ int main() {
     PRINT_FIELD(TiNamedArgument, argument);
 
     printf("\n======================================================================\n");
-    printf("\n=== 验证完成 ===\n");
+    printf("\n=== Verification Complete ===\n");
     return 0;
 }

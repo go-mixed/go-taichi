@@ -6,46 +6,46 @@ import (
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
-// 示例：Compute Graph 执行
-// 功能：执行包含多个 Kernel 的计算图，使用命名参数
+// Example: Compute Graph Execution
+// Features: Execute compute graph containing multiple kernels, use named parameters
 
 func main() {
-	fmt.Println("=== Compute Graph 示例 ===\n")
+	fmt.Println("=== Compute Graph Example ===\n")
 
-	// 创建运行时
+	// Create runtime
 	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
 	if err != nil {
 		panic(err)
 	}
 	defer runtime.Release()
 
-	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
+	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// 加载 AOT 模块
+	// Load AOT module
 	module, err := taichi.LoadAotModule(runtime, "./exmaples/10_aot_module.tcm")
 	if err != nil {
-		fmt.Printf("❌ 加载 AOT 模块失败: %v\n", err)
-		fmt.Println("\n请先运行以下命令生成包含 Compute Graph 的 AOT 模块：")
+		fmt.Printf("❌ Failed to load AOT module: %v\n", err)
+		fmt.Println("\nPlease run the following command to generate AOT module with Compute Graph:")
 		fmt.Println("  python generate_compute_graph.py")
 		return
 	}
 	defer module.Release()
 
-	fmt.Println("✅ AOT 模块加载成功")
+	fmt.Println("✅ AOT module loaded successfully")
 
-	// 获取 compute graph
+	// Get compute graph
 	graph, err := module.GetComputeGraph("my_compute_graph")
 	if err != nil {
-		fmt.Printf("❌ 获取 Compute Graph 失败: %v\n", err)
-		fmt.Println("\n当前 AOT 模块可能只包含 kernel，没有 compute graph。")
-		fmt.Println("Compute Graph 是多个 kernel 的组合，需要在 Python 中定义。")
-		fmt.Println("\n💡 提示：如果只需要使用 Kernel，请运行 10_aot_kernel.go")
+		fmt.Printf("❌ Failed to get Compute Graph: %v\n", err)
+		fmt.Println("\nCurrent AOT module may only contain kernels, no compute graph.")
+		fmt.Println("Compute Graph is a combination of multiple kernels, needs to be defined in Python.")
+		fmt.Println("\n💡 Tip: If you only need to use Kernel, please run 10_aot_kernel.go")
 		return
 	}
 
-	fmt.Printf("✅ 获取 Compute Graph: %s\n\n", graph.Name())
+	fmt.Printf("✅ Got Compute Graph: %s\n\n", graph.Name())
 
-	// 创建测试数据
+	// Create test data
 	n := uint32(100)
 	a, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
 	b, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
@@ -54,7 +54,7 @@ func main() {
 	defer b.Release()
 	defer c.Release()
 
-	// 初始化输入数据
+	// Initialize input data
 	dataA, _ := a.AsSliceFloat32()
 	dataB, _ := b.AsSliceFloat32()
 	for i := range dataA {
@@ -64,10 +64,10 @@ func main() {
 	a.Unmap()
 	b.Unmap()
 
-	fmt.Println("✅ 测试数据准备完成")
+	fmt.Println("✅ Test data prepared")
 
-	// 执行 Compute Graph（使用命名参数）
-	fmt.Println("\n--- 执行 Compute Graph ---")
+	// Execute Compute Graph (using named parameters)
+	fmt.Println("\n--- Execute Compute Graph ---")
 	graph.Launch().
 		ArgNdArray("input_a", a).
 		ArgNdArray("input_b", b).
@@ -75,28 +75,28 @@ func main() {
 		ArgFloat32("scale_factor", 1.5).
 		Run()
 
-	fmt.Println("✅ Compute Graph 执行完成")
+	fmt.Println("✅ Compute Graph execution completed")
 
-	// 检查结果
+	// Check results
 	dataC, _ := c.AsSliceFloat32()
-	fmt.Printf("\n前10个结果: ")
+	fmt.Printf("\nFirst 10 results: ")
 	for i := 0; i < 10 && i < len(dataC); i++ {
 		fmt.Printf("%.1f ", dataC[i])
 	}
 	fmt.Println()
 	c.Unmap()
 
-	// 异步执行示例
-	fmt.Println("\n--- 异步执行 ---")
+	// Asynchronous execution example
+	fmt.Println("\n--- Asynchronous Execution ---")
 
-	// 重置数据
+	// Reset data
 	dataA, _ = a.AsSliceFloat32()
 	for i := range dataA {
 		dataA[i] = float32(i) * 0.1
 	}
 	a.Unmap()
 
-	// 异步执行
+	// Execute asynchronously
 	graph.Launch().
 		ArgNdArray("input_a", a).
 		ArgNdArray("input_b", b).
@@ -104,22 +104,22 @@ func main() {
 		ArgFloat32("scale_factor", 2.0).
 		RunAsync()
 
-	fmt.Println("✅ 异步任务已提交")
+	fmt.Println("✅ Asynchronous task submitted")
 
-	// 等待完成
+	// Wait for completion
 	runtime.Wait()
-	fmt.Println("✅ 异步任务执行完成")
+	fmt.Println("✅ Asynchronous task completed")
 
-	// 检查结果
+	// Check results
 	dataC, _ = c.AsSliceFloat32()
-	fmt.Printf("\n异步执行结果前5个: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
+	fmt.Printf("\nAsync execution first 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
 		dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
 	c.Unmap()
 
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 Compute Graph vs Kernel：")
-	fmt.Println("   • Kernel: 单个计算函数")
-	fmt.Println("   • Compute Graph: 多个 kernel 的有向无环图")
-	fmt.Println("   • Compute Graph 可以优化整个计算流程")
-	fmt.Println("   • 使用命名参数，更灵活的参数传递")
+	fmt.Println("\n=== Example Complete ===")
+	fmt.Println("\n💡 Compute Graph vs Kernel:")
+	fmt.Println("   • Kernel: Single computation function")
+	fmt.Println("   • Compute Graph: Directed acyclic graph of multiple kernels")
+	fmt.Println("   • Compute Graph can optimize entire computation pipeline")
+	fmt.Println("   • Uses named parameters for more flexible parameter passing")
 }

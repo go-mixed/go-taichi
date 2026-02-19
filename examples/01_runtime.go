@@ -6,32 +6,32 @@ import (
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
-// 示例：创建和管理 Taichi 运行时
-// 功能：演示如何创建运行时、查询架构信息、正确释放资源
+// Example: Create and manage Taichi runtime
+// Features: Demonstrates how to create runtime, query architecture info, and properly release resources
 
 func main() {
-	fmt.Println("=== 运行时管理示例 ===\n")
+	fmt.Println("=== Runtime Management Example ===\n")
 
-	// 方式1: 自动选择最佳架构
-	fmt.Println("--- 方式1: 自动选择架构 ---")
+	// Method 1: Auto-select best architecture
+	fmt.Println("--- Method 1: Auto-select Architecture ---")
 	runtime1, err := taichi.NewRuntimeAuto("")
 	if err != nil {
 		panic(err)
 	}
 	defer runtime1.Release()
 
-	fmt.Printf("✅ 运行时创建成功\n")
-	fmt.Printf("📌 架构: %s\n", runtime1.ArchName())
-	fmt.Printf("📌 架构代码: %d\n\n", runtime1.Arch())
+	fmt.Printf("✅ Runtime created successfully\n")
+	fmt.Printf("📌 Architecture: %s\n", runtime1.ArchName())
+	fmt.Printf("📌 Architecture code: %d\n\n", runtime1.Arch())
 
-	// 方式2: 手动指定架构
-	fmt.Println("--- 方式2: 手动指定架构 ---")
+	// Method 2: Manually specify architecture
+	fmt.Println("--- Method 2: Manually Specify Architecture ---")
 
-	// 获取所有可用架构
+	// Get all available architectures
 	archs := taichi.GetAvailableArchs()
-	fmt.Printf("可用架构数量: %d\n", len(archs))
+	fmt.Printf("Available architectures: %d\n", len(archs))
 	for i, arch := range archs {
-		// 创建临时运行时来获取架构名称
+		// Create temporary runtime to get architecture name
 		tmpRuntime, _ := taichi.NewRuntime(arch, "")
 		if tmpRuntime != nil {
 			fmt.Printf("  [%d] %s\n", i, tmpRuntime.ArchName())
@@ -39,7 +39,7 @@ func main() {
 		}
 	}
 
-	// 使用第一个可用架构
+	// Use the first available architecture
 	if len(archs) > 0 {
 		runtime2, err := taichi.NewRuntime(archs[0], "")
 		if err != nil {
@@ -47,13 +47,13 @@ func main() {
 		}
 		defer runtime2.Release()
 
-		fmt.Printf("\n✅ 使用指定架构创建成功: %s\n", runtime2.ArchName())
+		fmt.Printf("\n✅ Created with specified architecture: %s\n", runtime2.ArchName())
 	}
 
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 要点：")
-	fmt.Println("   • 使用 defer runtime.Release() 确保资源释放")
-	fmt.Println("   • NewRuntimeAuto(\"\") 自动选择最佳架构")
-	fmt.Println("   • NewRuntime(arch, \"\") 手动指定架构")
-	fmt.Println("   • 优先级: Vulkan > CUDA > CPU")
+	fmt.Println("\n=== Example Complete ===")
+	fmt.Println("\n💡 Key Points:")
+	fmt.Println("   • Use defer runtime.Release() to ensure resource cleanup")
+	fmt.Println("   • NewRuntimeAuto(\"\") auto-selects best architecture")
+	fmt.Println("   • NewRuntime(arch, \"\") manually specifies architecture")
+	fmt.Println("   • Priority: Vulkan > CUDA > CPU")
 }
