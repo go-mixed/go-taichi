@@ -15,7 +15,7 @@ func main() {
 	taichi.Init()
 
 	// 创建运行时
-	runtime, err := taichi.NewRuntimeAuto()
+	runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
 	if err != nil {
 		panic(err)
 	}
@@ -24,11 +24,10 @@ func main() {
 	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
 
 	// 加载 AOT 模块
-	module, err := taichi.LoadAotModule(runtime, "./aot_module")
+	module, err := taichi.LoadAotModule(runtime, "./examples/10_aot_module.tcm")
 	if err != nil {
 		fmt.Printf("❌ 加载 AOT 模块失败: %v\n", err)
-		fmt.Println("\n请先运行以下命令生成 AOT 模块：")
-		fmt.Println("  python generate_aot.py")
+		fmt.Println("\n请先运行以下命令生成 AOT 模块： uv run ./examples/10_aot_kenerl.py")
 		return
 	}
 	defer module.Release()
@@ -82,14 +81,4 @@ func main() {
 	fmt.Printf("预期结果:  [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
 		dataA[0]+dataB[0], dataA[1]+dataB[1], dataA[2]+dataB[2], dataA[3]+dataB[3], dataA[4]+dataB[4])
 	c.Unmap()
-
-	fmt.Println("\n=== 示例完成 ===")
-	fmt.Println("\n💡 要点：")
-	fmt.Println("   • LoadAotModule() 加载预编译模块")
-	fmt.Println("   • GetKernel() 获取指定 kernel")
-	fmt.Println("   • Launch().ArgXXX().Run() Builder 模式")
-	fmt.Println("   • 参数顺序必须与 Python 定义一致")
-	fmt.Println("\n📝 前置步骤：")
-	fmt.Println("   1. pip install taichi==1.7.0")
-	fmt.Println("   2. python generate_aot.py")
 }

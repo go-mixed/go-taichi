@@ -15,7 +15,7 @@ func main() {
 	taichi.Init()
 
 	// 创建运行时
-	runtime, err := taichi.NewRuntimeAuto()
+	runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
 	if err != nil {
 		panic(err)
 	}
@@ -24,10 +24,10 @@ func main() {
 	fmt.Printf("✅ 运行时: %s\n\n", runtime.ArchName())
 
 	// 加载 AOT 模块
-	module, err := taichi.LoadAotModule(runtime, "./aot_module")
+	module, err := taichi.LoadAotModule(runtime, "./examples/10_aot_module.tcm")
 	if err != nil {
 		fmt.Printf("❌ 加载 AOT 模块失败: %v\n", err)
-		fmt.Println("\n请先运行: python generate_aot.py")
+		fmt.Println("\n请先运行以下命令生成 AOT 模块： uv run ./examples/10_aot_kenerl.py")
 		return
 	}
 	defer module.Release()
