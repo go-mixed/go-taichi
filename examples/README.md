@@ -1,131 +1,131 @@
-# Go-Taichi 示例
+# Go-Taichi Examples
 
-本目录包含 Go-Taichi 的使用示例，**每个示例只演示一个功能**，从文件名即可看出功能。
+Complete working examples demonstrating Go-Taichi features.
 
----
+## Examples Index
 
-## 📚 示例索引
+### Basic Examples (01-09)
 
-### 基础示例 (01-09)
+| File | Feature | Level |
+|------|---------|-------|
+| `01_runtime.go` | Runtime creation and management | ⭐ |
+| `02_ndarray_1d.go` | 1D array operations | ⭐ |
+| `03_ndarray_2d.go` | 2D matrix operations | ⭐ |
+| `04_image.go` | Image operations | ⭐ |
 
-| 文件 | 功能 | 难度 |
-|------|------|------|
-| `01_runtime.go` | 创建和管理运行时 | ⭐ |
-| `02_ndarray_1d.go` | 1D 数组操作 | ⭐ |
-| `03_ndarray_2d.go` | 2D 矩阵操作 | ⭐ |
-| `04_image.go` | 图像基础操作 | ⭐ |
+### AOT Examples (10-19)
 
-### AOT 示例 (10-19)
+| File | Feature | Level | Prerequisite |
+|------|---------|-------|--------------|
+| `10_aot_kernel.go` | AOT kernel execution | ⭐⭐ | AOT module |
+| `11_aot_async.go` | Async kernel execution | ⭐⭐ | AOT module |
+| `12_aot_batch.go` | Batch kernel execution | ⭐⭐ | AOT module |
+| `13_compute_graph.go` | Compute graph execution | ⭐⭐⭐ | Compute graph module |
 
-| 文件 | 功能 | 难度 | 前置要求 |
-|------|------|------|----------|
-| `10_aot_kernel.go` | AOT Kernel 基础执行 | ⭐⭐ | AOT 模块 |
-| `11_aot_async.go` | AOT Kernel 异步执行 | ⭐⭐ | AOT 模块 |
-| `12_aot_batch.go` | AOT Kernel 批量执行 | ⭐⭐ | AOT 模块 |
-| `13_compute_graph.go` | Compute Graph 执行 | ⭐⭐⭐ | Compute Graph 模块 |
+### Advanced Examples (20-29)
 
-### 高级示例 (20-29)
-
-| 文件 | 功能 | 难度 |
-|------|------|------|
-| `20_memory_cpu.go` | CPU 内存导入 | ⭐⭐⭐ |
-| `21_memory_cuda.go` | CUDA 内存导入和流管理 | ⭐⭐⭐⭐ |
-
-### 工具 (90+)
-
-| 文件 | 功能 | 说明 |
-|------|------|------|
-| `99_struct_alignment.go` | 结构体对齐测试 | 诊断工具，验证 Go-C FFI 正确性 |
+| File | Feature | Level |
+|------|---------|-------|
+| `20_memory_cpu.go` | CPU memory import | ⭐⭐⭐ |
+| `21_memory_cuda.go` | CUDA memory import | ⭐⭐⭐⭐ |
 
 ---
 
-## 🚀 快速开始
+## Quick Start
 
-### 1. 基础示例（无需前置步骤）
+### 1. Basic Examples (No Prerequisites)
 
 ```bash
-# 运行时管理
-CGO_ENABLED=0 go run 01_runtime.go
+# Runtime management
+go run ./examples/01_runtime.go
 
-# 1D 数组
-CGO_ENABLED=0 go run 02_ndarray_1d.go
+# 1D arrays
+go run ./examples/02_ndarray_1d.go
 
-# 2D 矩阵
-CGO_ENABLED=0 go run 03_ndarray_2d.go
+# 2D matrices
+go run ./examples/03_ndarray_2d.go
 
-# 图像操作
-CGO_ENABLED=0 go run 04_image.go
+# Image operations
+go run ./examples/04_image.go
 ```
 
-### 2. AOT 示例（需要生成 AOT 模块）
+### 2. AOT Examples (Requires AOT Module)
 
-**前置步骤：**
+**Generate AOT module first**:
 
 ```bash
-# 安装 Taichi
-pip install taichi==1.7.0
+# Install Taichi
+uv pip install taichi==1.7.4
 
-# 生成 AOT 模块
-python generate_aot.py
+# Generate AOT module
+uv run ./examples/10_aot_kernel.py
 ```
 
-**运行示例：**
+**Run examples**:
 
 ```bash
-# 基础 Kernel 执行
-CGO_ENABLED=0 go run 10_aot_kernel.go
+# Basic kernel execution
+go run ./examples/10_aot_kernel.go
 
-# 异步执行
-CGO_ENABLED=0 go run 11_aot_async.go
+# Async execution
+go run ./examples/11_aot_async.go
 
-# 批量执行
-CGO_ENABLED=0 go run 12_aot_batch.go
-
-# Compute Graph（需要特殊的 AOT 模块）
-python generate_compute_graph.py
-CGO_ENABLED=0 go run 13_compute_graph.go
+# Batch execution
+go run ./examples/12_aot_batch.go
 ```
 
-### 3. 高级示例
+### 3. Advanced Examples
 
 ```bash
-# CPU 内存导入
-CGO_ENABLED=0 go run 20_memory_cpu.go
+# CPU memory import
+go run ./examples/20_memory_cpu.go
 
-# CUDA 内存导入（概念演示）
-CGO_ENABLED=0 go run 21_memory_cuda.go
+# CUDA memory import (concept demo)
+go run ./examples/21_memory_cuda.go
 ```
 
 ---
 
-## 📖 学习路径
+## Learning Path
 
-### 初学者路径
+### Beginner Path
 
-1. `01_runtime.go` - 了解如何创建运行时
-2. `02_ndarray_1d.go` - 学习 1D 数组操作
-3. `03_ndarray_2d.go` - 学习 2D 矩阵操作
-4. `04_image.go` - 学习图像操作
+1. `01_runtime.go` - Understand runtime creation
+2. `02_ndarray_1d.go` - Learn 1D array operations
+3. `03_ndarray_2d.go` - Learn 2D matrix operations
+4. `04_image.go` - Learn image operations
 
-### 进阶路径
+### Intermediate Path
 
-5. `10_aot_kernel.go` - 学习 AOT Kernel 基础
-6. `11_aot_async.go` - 学习异步执行
-7. `12_aot_batch.go` - 学习批量执行优化
+5. `10_aot_kernel.go` - Learn AOT kernel basics
+6. `11_aot_async.go` - Learn async execution
+7. `12_aot_batch.go` - Learn batch optimization
 
-### 高级路径
+### Advanced Path
 
-8. `13_compute_graph.go` - 学习复杂计算图
-9. `20_memory_cpu.go` - 学习内存导入
-10. `21_memory_cuda.go` - 学习 CUDA 集成
+8. `13_compute_graph.go` - Learn compute graphs
+9. `20_memory_cpu.go` - Learn memory import
+10. `21_memory_cuda.go` - Learn CUDA integration
 
 ---
 
-## 🔧 AOT 模块生成
+## Generating AOT Modules
 
-### 基础 AOT 模块
+### Basic AOT Module
 
-创建 `generate_aot.py`：
+The `10_aot_kernel.py` script generates a basic AOT module with kernels:
+
+```bash
+python ./examples/10_aot_kernel.py
+```
+
+This creates `aot_module.tcm` containing:
+- `add_kernel` - Vector addition
+- `add_and_scale_kernel` - Addition with scaling
+
+### Custom Kernels
+
+To create your own kernels, write a Python script:
 
 ```python
 import taichi as ti
@@ -133,123 +133,72 @@ import taichi as ti
 ti.init(arch=ti.vulkan)
 
 @ti.kernel
-def add_kernel(a: ti.types.ndarray(), b: ti.types.ndarray(), c: ti.types.ndarray()):
+def my_kernel(
+    a: ti.types.ndarray(dtype=ti.f32, ndim=1),
+    b: ti.types.ndarray(dtype=ti.f32, ndim=1),
+):
     for i in a:
-        c[i] = a[i] + b[i]
+        b[i] = a[i] * 2.0
 
-# 导出 AOT
-m = ti.aot.Module(arch=ti.vulkan)
-m.add_kernel(add_kernel, template_args={
-    'a': ti.types.ndarray(),
-    'b': ti.types.ndarray(),
-    'c': ti.types.ndarray()
-})
-m.archive('./aot_module.tcm')
-print("✅ AOT 模块已生成到 ./aot_module.tcm")
-```
-
-运行：
-```bash
-python generate_aot.py
-```
-
-### Compute Graph 模块
-
-创建 `generate_compute_graph.py`：
-
-```python
-import taichi as ti
-
-ti.init(arch=ti.vulkan)
-
-# 定义多个 kernel
-@ti.kernel
-def kernel1(a: ti.types.ndarray(), b: ti.types.ndarray()):
-    for i in a:
-        b[i] = a[i] * 2
-
-@ti.kernel
-def kernel2(b: ti.types.ndarray(), c: ti.types.ndarray(), scale: ti.f32):
-    for i in b:
-        c[i] = b[i] * scale
-
-# 创建 Compute Graph
-graph_builder = ti.graph.GraphBuilder()
-
-# 定义输入输出
-input_a = graph_builder.create_ndarray_arg(ti.f32, 1)
-input_b = graph_builder.create_ndarray_arg(ti.f32, 1)
-output_c = graph_builder.create_ndarray_arg(ti.f32, 1)
-scale_factor = graph_builder.create_scalar_arg(ti.f32)
-
-# 添加 kernel 到图
-graph_builder.dispatch(kernel1, input_a, input_b)
-graph_builder.dispatch(kernel2, input_b, output_c, scale_factor)
-
-# 构建图
-graph = graph_builder.compile()
-
-# 导出
-m = ti.aot.Module(arch=ti.vulkan)
-m.add_graph('my_compute_graph', graph)
-m.save('./aot_module')
-print("✅ Compute Graph 模块已生成")
+# Export AOT module
+m = ti.aot.Module(ti.vulkan)
+m.add_kernel(my_kernel)
+m.archive("my_module.tcm")
 ```
 
 ---
 
-## 💡 命名规则
+## Naming Convention
 
-- **数字前缀**：表示难度和学习顺序
-  - `01-09`: 基础功能
-  - `10-19`: AOT 功能
-  - `20-29`: 高级功能
-  - `30-39`: 渲染功能（预留）
-  - `90+`: 工具和测试
+- **Number Prefix**: Indicates difficulty and learning order
+  - `01-09`: Basic features
+  - `10-19`: AOT features
+  - `20-29`: Advanced features
+  - `90+`: Tools and diagnostics
 
-- **功能名称**：清晰描述单一功能
-  - `runtime` - 运行时管理
-  - `ndarray_1d` - 1D 数组
-  - `aot_kernel` - AOT Kernel
-  - `memory_cpu` - CPU 内存导入
+- **Feature Name**: Clear description of single feature
+  - `runtime` - Runtime management
+  - `ndarray_1d` - 1D arrays
+  - `aot_kernel` - AOT kernels
+  - `memory_cpu` - CPU memory import
 
 ---
 
-## ❓ 常见问题
+## Common Issues
 
-### 编译失败？
+### AOT Module Not Found
 
-确保设置 `CGO_ENABLED=0`：
+Ensure `aot_module.tcm` exists in the examples directory:
+
 ```bash
-CGO_ENABLED=0 go build xxx.go
+ls ./examples/aot_module.tcm
 ```
 
-### AOT 模块加载失败？
+If missing, generate it:
 
-1. 确认 `./aot_module.tcm` 存在
-2. 确认包含 `metadata.json` 文件
-3. 确认 Python 和 Go 使用相同架构（如 Vulkan）
-4. 确认 Taichi 版本为 1.7.0
+```bash
+python ./examples/10_aot_kernel.py
+```
 
-### Kernel 找不到？
+### Kernel Not Found
 
-确保 Python 导出的 kernel 名称与 Go 中使用的名称一致：
+Ensure the kernel name in Go matches the Python definition:
 
 ```python
 # Python
 @ti.kernel
-def add_kernel(...):  # 名称: add_kernel
+def add_kernel(...):  # Name: add_kernel
     pass
 ```
 
 ```go
 // Go
-kernel, _ := module.GetKernel("add_kernel")  // 使用相同名称
+kernel, _ := module.GetKernel("add_kernel")  // Same name
 ```
 
-### 参数类型不匹配？
+### Argument Type Mismatch
 
-确保参数顺序和类型完全匹配：
+Ensure argument order and types match exactly:
 
 ```python
 # Python
@@ -259,43 +208,27 @@ def kernel(arr: ti.types.ndarray(), value: ti.f32):
 ```
 
 ```go
-// Go - 顺序和类型必须匹配
+// Go - Order and types must match
 kernel.Launch().
-    ArgNdArray(arr).     // 第1个: ndarray
-    ArgFloat32(value).   // 第2个: f32
+    ArgNdArray(arr).     // 1st: ndarray
+    ArgFloat32(value).   // 2nd: f32
     Run()
 ```
 
 ---
 
-## 📊 示例对比
+## Design Principles
 
-| 类别 | 示例数量 | 总难度 | 前置要求 |
-|------|---------|--------|----------|
-| 基础 | 4 | ⭐ | 无 |
-| AOT | 4 | ⭐⭐ | AOT 模块 |
-| 高级 | 2 | ⭐⭐⭐ | 无/CUDA |
-| 工具 | 1 | ⭐⭐⭐⭐ | 无 |
-
----
-
-## 📚 参考资料
-
-- [Taichi AOT 文档](https://docs.taichi-lang.org/docs/aot)
-- [Go-Taichi 完整文档](../CLAUDE.md)
-- [Taichi Python 教程](https://docs.taichi-lang.org/)
-- [结构体对齐说明](../taichi/c_api/STRUCT_ALIGNMENT.md)
+1. **One Example, One Feature** - Each file demonstrates one core feature
+2. **Self-Documenting Names** - Understand content from filename
+3. **Numbered Ordering** - Organized by difficulty and learning sequence
+4. **Standalone Runnable** - Each example is a complete main program
+5. **Clear Comments** - Code begins with feature description and key points
 
 ---
 
-## 🎯 设计原则
+## See Also
 
-1. **一个示例一个功能** - 每个文件只演示一个核心功能
-2. **从文件名看功能** - 无需打开文件即可知道内容
-3. **数字前缀排序** - 按难度和学习顺序组织
-4. **独立可运行** - 每个示例都是完整的 main 程序
-5. **清晰的注释** - 代码开头说明功能和要点
-
----
-
-**提示**：如果遇到问题，请查看 [../CLAUDE.md](../CLAUDE.md) 的常见问题部分。
+- [High-Level API Documentation](../docs/high_api/)
+- [Low-Level API Documentation](../docs/low_api/)
+- [Taichi AOT Documentation](https://docs.taichi-lang.org/docs/aot)
