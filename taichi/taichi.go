@@ -4,21 +4,25 @@ import (
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
-// Init 初始化Taichi
+// initial 初始化Taichi
 // 必须在使用任何其他功能之前调用
-func Init() error {
-	return c_api.Init()
+func initial(libDir string) error {
+	return c_api.Init(libDir)
 }
 
 // GetVersion 获取Taichi C-API版本
 func GetVersion() uint32 {
-	c_api.Init()
+	if !c_api.Initialized() {
+		panic("taichi not initial")
+	}
 	return c_api.GetVersion()
 }
 
 // GetAvailableArchs 获取所有可用的计算架构
 func GetAvailableArchs() []c_api.TiArch {
-	c_api.Init()
+	if !c_api.Initialized() {
+		panic("taichi not initial")
+	}
 	return c_api.GetAvailableArchs()
 }
 

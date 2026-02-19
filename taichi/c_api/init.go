@@ -1,11 +1,11 @@
 // Package taichi 提供Taichi C-API的Go语言绑定
 // 使用purego实现跨平台支持(Windows/Linux/macOS)
-//
-// 编译时请设置: CGO_ENABLED=0
 package c_api
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"syscall"
@@ -14,56 +14,73 @@ import (
 // libHandle 动态链接库句柄
 var libHandle uintptr
 
+// Initialized 检查是否已初始化
+func Initialized() bool {
+	return libHandle != 0
+}
+
 // Init 初始化Taichi C-API
 //
-// 自动从c_api/lib目录加载动态库:
+// 参数:
+//   - libDir: 库文件目录路径
+//   - 空字符串(""): 先在当前工作目录查找，找不到则在系统PATH中查找
+//   - 非空路径: 先在指定目录查找，找不到则在系统PATH中查找
+//
+// 自动加载动态库:
 //   - Windows: taichi_c_api.dll
 //   - Linux: libtaichi_c_api.so
 //   - macOS: libtaichi_c_api.dylib
 //
 // 使用前必须设置: CGO_ENABLED=0
-func Init() error {
-	// 获取当前文件所在目录
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		return fmt.Errorf("无法获取当前文件路径")
-	}
+func Init(libDir string) error {
+	// 确定库文件名
+	var libName string
 
-	dir := filepath.Dir(filename)
-
-	// 根据操作系统选择库文件
-	var libPath string
 	switch runtime.GOOS {
 	case "windows":
-		libPath = filepath.Join(dir, "lib", "taichi_c_api.dll")
-		// Windows需要使用syscall.LoadLibrary
-		handle, err := syscall.LoadLibrary(libPath)
-		if err != nil {
-			return fmt.Errorf("加载库失败: %w (路径: %s)", err, libPath)
-		}
-		libHandle = uintptr(handle)
-
+		libName = "taichi_c_api.dll"
 	case "linux":
-		libPath = filepath.Join(dir, "lib", "libtaichi_c_api.so")
-		// Linux使用purego.Dlopen
-		handle, err := openLibraryPosix(libPath)
-		if err != nil {
-			return fmt.Errorf("加载库失败: %w (路径: %s)", err, libPath)
-		}
-		libHandle = handle
-
+		libName = "libtaichi_c_api.so"
 	case "darwin":
-		libPath = filepath.Join(dir, "lib", "libtaichi_c_api.dylib")
-		// macOS使用purego.Dlopen
-		handle, err := openLibraryPosix(libPath)
-		if err != nil {
-			return fmt.Errorf("加载库失败: %w (路径: %s)", err, libPath)
-		}
-		libHandle = handle
-
+		libName = "libtaichi_c_api.dylib"
 	default:
 		return fmt.Errorf("不支持的操作系统: %s", runtime.GOOS)
 	}
+
+	// 使用指定目录
+	libPath := filepath.Join(libDir, libName)
+
+	// 如果不存在，则在PATH中查找
+	if _, err := os.Stat(libPath); err != nil {
+		// 在系统PATH中查找
+		libPath, err = exec.LookPath(libName)
+		if err != nil {
+			return fmt.Errorf("%s not found in system environment \"PATH\": %w", libName, err)
+		}
+	}
+
+	// 加载库文件
+	var handle uintptr
+
+	switch runtime.GOOS {
+	case "windows":
+		// Windows使用syscall.LoadLibrary
+		h, err := syscall.LoadLibrary(libPath)
+		if err != nil {
+			return fmt.Errorf("加载库失败: %w (路径: %s)", err, libPath)
+		}
+		handle = uintptr(h)
+
+	case "linux", "darwin":
+		// Linux/macOS使用purego.Dlopen
+		h, err := openLibraryPosix(libPath)
+		if err != nil {
+			return fmt.Errorf("加载库失败: %w (路径: %s)", err, libPath)
+		}
+		handle = h
+	}
+
+	libHandle = handle
 
 	// 注册所有函数
 	if err := registerAllFunctions(); err != nil {

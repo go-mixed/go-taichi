@@ -1,6 +1,7 @@
 # Go-Taichi
 
-> Go bindings for Taichi C-API - High-performance GPU parallel computing
+> Pure Go bindings for Taichi C-API - High-performance GPU parallel computing
+
 
 [![Go Version](https://img.shields.io/badge/Go-1.25%2B-blue)](https://go.dev/)
 [![Taichi Version](https://img.shields.io/badge/Taichi-1.7.4-green)](https://www.taichi-lang.org/)
@@ -12,7 +13,7 @@
 - 🎯 **Simple API** - High-level abstractions with automatic resource management
 - 🔧 **Cross-Platform** - Windows / Linux / macOS
 - 💻 **Multiple Backends** - Vulkan / CUDA / CPU / Metal
-- 📦 **Pure Go** - No CGo required
+- 📦 **Pure Go** - No CGo required, No *.c/h/hpp
 - 🎨 **Type Safe** - Complete type system mapping
 
 ## Installation
@@ -21,7 +22,29 @@
 go get github.com/go-mixed/go-taichi
 ```
 
-**That's it!** The project includes the required Taichi C-API dynamic library (`taichi_c_api.dll`/`.so`/`.dylib`), so no additional setup is needed.
+### Runtime Library
+
+Download the Taichi C-API dynamic library from [Releases](https://github.com/go-mixed/go-taichi/releases) and place it in your project's `taichi/c_api/lib/` directory:
+
+**Required file**:
+- Windows: `taichi_c_api.dll`
+- Linux: `libtaichi_c_api.so`
+- macOS: `libtaichi_c_api.dylib`
+
+**Directory structure**:
+```
+your-project/
+└── taichi/
+    └── c_api/
+        └── lib/
+            └── taichi_c_api.dll  # or .so / .dylib
+```
+
+**Note**: The library is loaded at runtime from this location.
+
+### C Header Files
+
+The C header files in `taichi/c_api/include/` are reference files used for generating Go API bindings. They are not required at runtime.
 
 ## Quick Start
 
@@ -36,11 +59,9 @@ import (
 )
 
 func main() {
-    // 1. Initialize Taichi
-    taichi.Init()
-
+	
     // 2. Create runtime (auto-select best backend)
-    runtime, err := taichi.NewRuntimeAuto()
+    runtime, err := taichi.NewRuntimeAuto("")
     if err != nil {
         panic(err)
     }

@@ -2,6 +2,7 @@ package taichi
 
 import (
 	"fmt"
+
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
@@ -12,10 +13,15 @@ type Runtime struct {
 }
 
 // NewRuntime 创建新的运行时
-// 如果arch为0，自动选择最佳架构
-func NewRuntime(arch Arch) (*Runtime, error) {
+//
+// 参数:
+//   - arch: 计算架构。如果为0，自动选择最佳架构
+//   - libDir: 动态库目录路径
+//   - 空字符串(""): 先在当前工作目录查找，找不到则在系统PATH中查找
+//   - 非空路径: 先在指定目录查找，找不到则在系统PATH中查找
+func NewRuntime(arch Arch, libDir string) (*Runtime, error) {
 	// 初始化C-API
-	if err := Init(); err != nil {
+	if err := initial(libDir); err != nil {
 		return nil, fmt.Errorf("初始化失败: %w", err)
 	}
 
@@ -42,8 +48,15 @@ func NewRuntime(arch Arch) (*Runtime, error) {
 }
 
 // NewRuntimeAuto 自动选择最佳架构创建运行时
-func NewRuntimeAuto() (*Runtime, error) {
-	return NewRuntime(0)
+//
+// 参数:
+//   - libDir: 动态库目录路径
+//   - 空字符串(""): 先在当前工作目录查找，找不到则在系统PATH中查找
+//   - 非空路径: 先在指定目录查找，找不到则在系统PATH中查找
+//
+// 架构选择优先级: Vulkan > CUDA > x64 > ARM64 > OpenGL
+func NewRuntimeAuto(libDir string) (*Runtime, error) {
+	return NewRuntime(0, libDir)
 }
 
 // Release 释放运行时资源

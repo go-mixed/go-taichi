@@ -17,8 +17,8 @@ The high-level API provides convenient wrappers around the low-level C-API, feat
 Runtime management and backend selection.
 
 **Key Methods**:
-- `NewRuntimeAuto()` - Auto-select best backend
-- `NewRuntime(arch)` - Manual backend selection
+- `NewRuntimeAuto(libDir string)` - Auto-select best backend
+- `NewRuntime(arch taichi.Arch, libDir string)` - Manual backend selection
 - `Arch()` - Get backend type
 - `ArchName()` - Get backend name
 - `Wait()` - Wait for all tasks
@@ -26,7 +26,7 @@ Runtime management and backend selection.
 
 **Example**:
 ```go
-runtime, _ := taichi.NewRuntimeAuto()
+runtime, _ := taichi.NewRuntimeAuto("/path/to/taichi/lib")
 defer runtime.Release()
 fmt.Printf("Backend: %s\n", runtime.ArchName())
 ```

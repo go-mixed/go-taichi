@@ -12,11 +12,8 @@ import (
 func main() {
 	fmt.Println("=== Compute Graph 示例 ===\n")
 
-	// 初始化
-	taichi.Init()
-
 	// 创建运行时
-	runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
+	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
 	if err != nil {
 		panic(err)
 	}

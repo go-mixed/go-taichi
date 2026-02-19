@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/go-mixed/go-taichi/taichi"
 )
 
@@ -11,11 +12,8 @@ import (
 func main() {
 	fmt.Println("=== AOT Kernel 批量执行 ===\n")
 
-	// 初始化
-	taichi.Init()
-
 	// 创建运行时
-	runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
+	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
 	if err != nil {
 		panic(err)
 	}

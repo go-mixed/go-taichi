@@ -19,7 +19,7 @@ The low-level API provides direct access to Taichi C-API functions. Use these wh
 Runtime initialization, version info, and error handling.
 
 **Key Functions**:
-- `Init()` - Initialize C-API
+- `Init(libDir string)` - Initialize C-API
 - `GetVersion()` - Get version
 - `GetAvailableArchs()` - List backends
 - `CreateRuntime()` / `DestroyRuntime()` - Runtime management

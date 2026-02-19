@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-mixed/go-taichi/taichi"
 	"unsafe"
+
+	"github.com/go-mixed/go-taichi/taichi"
 )
 
 // 示例：CPU 内存导入
@@ -12,11 +13,8 @@ import (
 func main() {
 	fmt.Println("=== CPU 内存导入示例 ===\n")
 
-	// 初始化
-	taichi.Init()
-
 	// 创建运行时
-	runtime, err := taichi.NewRuntimeAuto()
+	runtime, err := taichi.NewRuntimeAuto("")
 	if err != nil {
 		panic(err)
 	}
