@@ -16,7 +16,7 @@ type Memory struct {
 }
 
 // NewMemory 创建新的内存对象
-func NewMemory(runtime *Runtime, size uint64) (*Memory, error) {
+func NewMemory(tiRuntime *Runtime, size uint64) (*Memory, error) {
 	allocInfo := c_api.TiMemoryAllocateInfo{
 		Size:      size,
 		HostWrite: c_api.TI_TRUE,
@@ -24,19 +24,21 @@ func NewMemory(runtime *Runtime, size uint64) (*Memory, error) {
 		Usage:     c_api.TiMemoryUsageFlags(c_api.TI_MEMORY_USAGE_STORAGE_BIT),
 	}
 
-	handle := c_api.AllocateMemory(runtime.handle, &allocInfo)
+	handle := c_api.AllocateMemory(tiRuntime.handle, &allocInfo)
 	if handle == c_api.TI_NULL_HANDLE {
 		errCode, errMsg := c_api.GetLastError()
 		return nil, fmt.Errorf("内存分配失败 [%d]: %s", errCode, errMsg)
 	}
 
-	return &Memory{
-		runtime: runtime,
+	m := &Memory{
+		runtime: tiRuntime,
 		handle:  handle,
 		size:    size,
 		mapped:  false,
 		ptr:     nil,
-	}, nil
+	}
+
+	return m, nil
 }
 
 // Release 释放内存

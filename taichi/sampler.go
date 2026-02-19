@@ -58,11 +58,9 @@ type SamplerCreateInfo struct {
 //	}
 func NewSampler(runtime *Runtime, createInfo *SamplerCreateInfo) (*Sampler, error) {
 	cInfo := &c_api.TiSamplerCreateInfo{
-		MagFilter:    createInfo.MagFilter,
-		MinFilter:    createInfo.MinFilter,
-		AddressModeU: createInfo.AddressModeU,
-		AddressModeV: createInfo.AddressModeV,
-		AddressModeW: createInfo.AddressModeW,
+		MagFilter:   createInfo.MagFilter,
+		MinFilter:   createInfo.MinFilter,
+		AddressMode: createInfo.AddressModeU, // 使用 U 作为统一地址模式
 	}
 
 	handle := c_api.CreateSampler(runtime.handle, cInfo)

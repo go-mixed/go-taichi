@@ -87,9 +87,8 @@ func (img *Image) CopyTo(dst *Image) error {
 
 	// 构造图像切片
 	srcSlice := &c_api.TiImageSlice{
-		Image:      img.handle,
-		MipLevel:   0,
-		ArrayLayer: 0,
+		Image:    img.handle,
+		MipLevel: 0,
 		Offset: c_api.TiImageOffset{
 			X: 0,
 			Y: 0,
@@ -104,9 +103,8 @@ func (img *Image) CopyTo(dst *Image) error {
 	}
 
 	dstSlice := &c_api.TiImageSlice{
-		Image:      dst.handle,
-		MipLevel:   0,
-		ArrayLayer: 0,
+		Image:    dst.handle,
+		MipLevel: 0,
 		Offset: c_api.TiImageOffset{
 			X: 0,
 			Y: 0,

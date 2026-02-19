@@ -2,9 +2,11 @@
 
 ## 问题概述
 
-在使用 `purego` 进行 Go-C FFI 调用时，必须确保 Go 结构体的内存布局与 C 结构体**完全一致**。即使字段顺序和类型正确，对齐（alignment）和填充（padding）的差异也会导致 C 代码读取错误的内存位置。
+在使用 `purego` 进行 Go-C FFI 调用时，必须确保 Go 结构体的内存布局与 C 结构体**完全一致**。即使字段顺序和类型正确，对齐（alignment）、填充（padding）、字段顺序或缺失字段的差异都会导致 C 代码读取错误的内存位置。
 
-## 关键问题
+---
+
+## 常见问题类型
 
 ### 1. Union 的大小计算
 
@@ -16,7 +18,6 @@ typedef union TiArgumentValue {
   TiNdArray ndarray;        // 152 bytes
   TiTexture texture;        // 40 bytes
   TiScalar scalar;          // 16 bytes
-  TiTensor tensor;          // 144 bytes
 } TiArgumentValue;
 ```
 
@@ -35,6 +36,8 @@ type TiArgumentValue struct {
     Data [152]byte  // ✅ 正确：与 C union 的实际大小匹配
 }
 ```
+
+---
 
 ### 2. 结构体字段间的隐式 Padding
 
@@ -69,110 +72,80 @@ type TiArgument struct {
 // 总大小：160 bytes ✅
 ```
 
-## 诊断方法
+## 验证工具
 
-### 使用 C 编译器验证
+### 使用完整验证工具
 
-创建一个 C 程序来检查实际的结构体大小和字段偏移：
+项目提供了完整的验证工具来检查所有结构体：
 
-```c
-#include <stdio.h>
-#include <stddef.h>
-#include "taichi/taichi_core.h"
-
-int main() {
-    printf("sizeof(TiArgumentValue) = %zu\n", sizeof(TiArgumentValue));
-    printf("sizeof(TiArgument) = %zu\n", sizeof(TiArgument));
-    printf("offset of type:  %zu\n", offsetof(TiArgument, type));
-    printf("offset of value: %zu\n", offsetof(TiArgument, value));
-    return 0;
-}
-```
-
-编译并运行：
+**运行 Go 验证：**
 ```bash
-gcc -I./taichi/c_api/include check_struct.c -o check_struct
-./check_struct
+cd examples
+go run 99_struct_alignment.go > go_output.txt
 ```
 
-### 使用 Go 的 unsafe 包验证
-
-```go
-package main
-
-import (
-    "fmt"
-    "unsafe"
-    "go-taichi/taichi/c_api"
-)
-
-func main() {
-    var arg c_api.TiArgument
-    fmt.Printf("sizeof(TiArgument) = %d\n", unsafe.Sizeof(arg))
-    fmt.Printf("offset of Type:  %d\n", unsafe.Offsetof(arg.Type))
-    fmt.Printf("offset of Value: %d\n", unsafe.Offsetof(arg.Value))
-}
+**编译并运行 C 验证：**
+```bash
+cd examples
+gcc -I../taichi/c_api/include 99_struct_alignment.c -o verify_structs.exe
+./verify_structs.exe > c_output.txt
 ```
 
-**两者的输出必须完全一致！**
+**对比结果：**
+```bash
+diff go_output.txt c_output.txt
+```
 
-## 解决方案步骤
+如果有差异，说明结构体定义不匹配，需要修复！
 
-1. **使用 C 编译器确定真实大小**
-   - 编译一个 C 程序，打印所有关键结构体的 `sizeof()` 和 `offsetof()`
-   - 记录每个结构体的大小和字段偏移
-
-2. **在 Go 中验证大小**
-   - 使用 `unsafe.Sizeof()` 检查 Go 结构体大小
-   - 使用 `unsafe.Offsetof()` 检查字段偏移
-
-3. **添加显式 padding**
-   - 如果 offset 不匹配，使用 `_ [N]byte` 添加显式 padding
-   - 确保总大小和每个字段的 offset 都与 C 一致
-
-4. **验证数据传递**
-   - 创建测试用例，打印原始字节
-   - 确认数据在 Go 和 C 之间正确传递
-
-## 常见陷阱
-
-### 1. 假设对齐规则相同
-❌ **错误假设**：Go 和 C 的对齐规则总是相同的
-✅ **正确做法**：始终用 C 编译器验证实际布局
-
-### 2. 忽略 Union 的特性
-❌ **错误做法**：为 union 分配"足够大"的空间（如 512 bytes）
-✅ **正确做法**：精确计算 union 的实际大小（最大成员的大小）
-
-### 3. 依赖隐式 padding
-❌ **错误做法**：让 Go 编译器自动添加 padding
-✅ **正确做法**：显式声明 padding 字段（`_ [N]byte`）
-
-### 4. 未验证数据传递
-❌ **错误做法**：假设编译通过就是正确的
-✅ **正确做法**：打印原始字节，验证内存布局
-
-## 测试检查清单
-
-创建新的 C 结构体绑定时，请遵循以下清单：
-
-- [ ] 使用 C 编译器检查 `sizeof(struct)`
-- [ ] 使用 C 编译器检查所有字段的 `offsetof(struct, field)`
-- [ ] 在 Go 中使用 `unsafe.Sizeof()` 验证大小匹配
-- [ ] 在 Go 中使用 `unsafe.Offsetof()` 验证所有字段偏移匹配
-- [ ] 如果是 union，确认使用最大成员的大小
-- [ ] 添加必要的显式 padding（`_ [N]byte`）
-- [ ] 创建测试用例，打印原始字节验证数据正确性
-- [ ] 使用实际的 C API 调用测试功能
 
 ## 相关文件
 
 - `taichi/c_api/types.go` - Go 结构体定义
-- `taichi/c_api/include/taichi/taichi_core.h` - C 结构体定义
-- `examples/test_struct_alignment.go` - 结构体对齐测试工具
+- `taichi/c_api/include/taichi/taichi_core.h` - C 结构体定义（权威来源）
+- `examples/99_struct_alignment.go` - Go 验证工具
+- `examples/99_struct_alignment.c` - C 验证工具
+- `STRUCT_MISMATCH_ISSUE.md` - 已发现问题的详细记录
+
+## 对齐规则速查
+
+### 基本规则
+
+1. **字段对齐**：每个字段必须对齐到其自然对齐边界
+   - `uint32`: 4 字节对齐
+   - `uint64`: 8 字节对齐
+   - `uintptr`: 8 字节对齐（64位系统）
+   - `float32`: 4 字节对齐
+
+2. **结构体对齐**：结构体的对齐要求 = 最大成员的对齐要求
+
+3. **结构体大小**：结构体总大小必须是其对齐要求的倍数
+
+### 示例
+
+```go
+// 示例 1: 需要 padding
+type Example1 struct {
+    A uint32   // 4 bytes, offset 0
+    _  [4]byte // padding
+    B uint64   // 8 bytes, offset 8
+}
+// 总大小: 16 bytes
+
+// 示例 2: 不需要 padding
+type Example2 struct {
+    A uint64   // 8 bytes, offset 0
+    B uint32   // 4 bytes, offset 8
+    C uint32   // 4 bytes, offset 12
+}
+// 总大小: 16 bytes
+```
+
+---
 
 ## 参考资料
 
 - [Go unsafe 包文档](https://pkg.go.dev/unsafe)
 - [C 结构体对齐规则](https://en.cppreference.com/w/c/language/object#Alignment)
 - [Purego FFI 文档](https://github.com/ebitengine/purego)
+- [Taichi C-API 文档](https://docs.taichi-lang.org/docs/taichi_core)
