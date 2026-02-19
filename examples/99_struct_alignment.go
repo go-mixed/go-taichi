@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-taichi/taichi/c_api"
+	"github.com/go-mixed/go-taichi/taichi/c_api"
 	"strings"
 	"unsafe"
 )

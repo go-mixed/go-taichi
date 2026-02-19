@@ -1,4 +1,4 @@
-module go-taichi
+module github.com/go-mixed/go-taichi
 
 go 1.25.7
 

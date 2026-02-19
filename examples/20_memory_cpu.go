@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-taichi/taichi"
+	"github.com/go-mixed/go-taichi/taichi"
 	"unsafe"
 )
 

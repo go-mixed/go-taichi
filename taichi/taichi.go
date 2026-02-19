@@ -1,7 +1,7 @@
 package taichi
 
 import (
-	"go-taichi/taichi/c_api"
+	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
 // Init 初始化Taichi

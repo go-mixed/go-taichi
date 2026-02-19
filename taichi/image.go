@@ -2,7 +2,7 @@ package taichi
 
 import (
 	"fmt"
-	"go-taichi/taichi/c_api"
+	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
 // Image 图像抽象

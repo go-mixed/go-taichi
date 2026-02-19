@@ -2,7 +2,7 @@ package taichi
 
 import (
 	"fmt"
-	"go-taichi/taichi/c_api"
+	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
 // Runtime Taichi运行时的高级抽象

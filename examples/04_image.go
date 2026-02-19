@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-taichi/taichi"
+	"github.com/go-mixed/go-taichi/taichi"
 )
 
 // 示例：图像基础操作

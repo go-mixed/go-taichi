@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"go-taichi/taichi"
+
+	"github.com/go-mixed/go-taichi/taichi"
 )
 
 // 示例：AOT Kernel 基础执行
