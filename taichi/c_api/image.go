@@ -2,7 +2,7 @@ package c_api
 
 import "github.com/ebitengine/purego"
 
-// ===== 图像处理函数指针 =====
+// ===== Image Processing Function Pointers =====
 
 var (
 	tiAllocateImage           func(runtime TiRuntime, allocateInfo *TiImageAllocateInfo) TiImage
@@ -14,7 +14,7 @@ var (
 	tiTransitionImage         func(runtime TiRuntime, image TiImage, layout TiImageLayout)
 )
 
-// registerImageFunctions 注册图像处理函数
+// registerImageFunctions registers image processing functions
 func registerImageFunctions() error {
 	purego.RegisterLibFunc(&tiAllocateImage, libHandle, "ti_allocate_image")
 	purego.RegisterLibFunc(&tiFreeImage, libHandle, "ti_free_image")
@@ -26,18 +26,18 @@ func registerImageFunctions() error {
 	return nil
 }
 
-// ===== 导出的图像处理函数 =====
+// ===== Exported Image Processing Functions =====
 
-// AllocateImage 使用提供的参数分配设备图像
+// AllocateImage allocates a device image with the provided parameters
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - allocateInfo: 图像分配信息
+// Parameters:
+//   - runtime: Runtime handle
+//   - allocateInfo: Image allocation information
 //
-// 返回:
-//   - 图像句柄,如果分配失败则返回TI_NULL_HANDLE
+// Returns:
+//   - Image handle, or TI_NULL_HANDLE if allocation fails
 //
-// 示例:
+// Example:
 //
 //	allocInfo := taichi.TiImageAllocateInfo{
 //	    Dimension: taichi.TI_IMAGE_DIMENSION_2D,
@@ -57,29 +57,29 @@ func AllocateImage(runtime TiRuntime, allocateInfo *TiImageAllocateInfo) TiImage
 	return tiAllocateImage(runtime, allocateInfo)
 }
 
-// FreeImage 释放图像分配
+// FreeImage frees an image allocation
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - image: 要释放的图像句柄
+// Parameters:
+//   - runtime: Runtime handle
+//   - image: Image handle to free
 //
-// 示例:
+// Example:
 //
 //	taichi.FreeImage(runtime, image)
 func FreeImage(runtime TiRuntime, image TiImage) {
 	tiFreeImage(runtime, image)
 }
 
-// CreateSampler 创建图像采样器
+// CreateSampler creates an image sampler
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - createInfo: 采样器创建信息
+// Parameters:
+//   - runtime: Runtime handle
+//   - createInfo: Sampler creation information
 //
-// 返回:
-//   - 采样器句柄,如果创建失败则返回TI_NULL_HANDLE
+// Returns:
+//   - Sampler handle, or TI_NULL_HANDLE if creation fails
 //
-// 示例:
+// Example:
 //
 //	createInfo := taichi.TiSamplerCreateInfo{
 //	    MagFilter:     taichi.TI_FILTER_LINEAR,
@@ -93,29 +93,29 @@ func CreateSampler(runtime TiRuntime, createInfo *TiSamplerCreateInfo) TiSampler
 	return tiCreateSampler(runtime, createInfo)
 }
 
-// DestroySampler 销毁采样器
+// DestroySampler destroys a sampler
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - sampler: 要销毁的采样器句柄
+// Parameters:
+//   - runtime: Runtime handle
+//   - sampler: Sampler handle to destroy
 //
-// 示例:
+// Example:
 //
 //	taichi.DestroySampler(runtime, sampler)
 func DestroySampler(runtime TiRuntime, sampler TiSampler) {
 	tiDestroySampler(runtime, sampler)
 }
 
-// CopyImageDeviceToDevice 在设备内复制图像的连续子部分
+// CopyImageDeviceToDevice copies a contiguous subsection of an image within the device
 //
-// 两个子部分不能重叠。这是一个设备命令。
+// The two subsections must not overlap. This is a device command.
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - dst: 目标图像切片
-//   - src: 源图像切片
+// Parameters:
+//   - runtime: Runtime handle
+//   - dst: Destination image slice
+//   - src: Source image slice
 //
-// 示例:
+// Example:
 //
 //	srcSlice := &taichi.TiImageSlice{
 //	    Image:    srcImage,
@@ -134,33 +134,34 @@ func CopyImageDeviceToDevice(runtime TiRuntime, dst *TiImageSlice, src *TiImageS
 	tiCopyImageDeviceToDevice(runtime, dst, src)
 }
 
-// TrackImageExt 使用提供的图像布局跟踪设备图像
+// TrackImageExt tracks a device image with the provided image layout
 //
-// 由于Taichi在内部跟踪图像布局,因此仅在通知Taichi图像已被外部过程转换为新布局时有用。
+// Since Taichi tracks image layouts internally, this is only useful for notifying Taichi
+// that an image has been transitioned to a new layout by an external process.
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - image: 图像句柄
-//   - layout: 新的图像布局
+// Parameters:
+//   - runtime: Runtime handle
+//   - image: Image handle
+//   - layout: New image layout
 //
-// 示例:
+// Example:
 //
 //	taichi.TrackImageExt(runtime, image, taichi.TI_IMAGE_LAYOUT_SHADER_READ)
 func TrackImageExt(runtime TiRuntime, image TiImage, layout TiImageLayout) {
 	tiTrackImageExt(runtime, image, layout)
 }
 
-// TransitionImage 将图像转换为提供的图像布局
+// TransitionImage transitions an image to the provided image layout
 //
-// 这是一个设备命令。由于Taichi在内部跟踪图像布局,
-// 因此仅在强制执行图像布局供外部过程使用时有用。
+// This is a device command. Since Taichi tracks image layouts internally,
+// this is only useful for forcing an image layout for use by external processes.
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - image: 图像句柄
-//   - layout: 目标图像布局
+// Parameters:
+//   - runtime: Runtime handle
+//   - image: Image handle
+//   - layout: Target image layout
 //
-// 示例:
+// Example:
 //
 //	taichi.TransitionImage(runtime, image, taichi.TI_IMAGE_LAYOUT_SHADER_READ)
 func TransitionImage(runtime TiRuntime, image TiImage, layout TiImageLayout) {

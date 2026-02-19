@@ -5,7 +5,7 @@ import (
 	"unsafe"
 )
 
-// NdArray N维数组抽象
+// NdArray N-dimensional array abstraction
 type NdArray struct {
 	*Memory
 	shape    []uint32
@@ -13,39 +13,39 @@ type NdArray struct {
 	elemSize int
 }
 
-// NewNdArray1D 创建1D数组
+// NewNdArray1D creates a 1D array
 func NewNdArray1D(runtime *Runtime, length uint32, elemType DataType) (*NdArray, error) {
 	return NewNdArray(runtime, []uint32{length}, elemType)
 }
 
-// NewNdArray2D 创建2D数组
+// NewNdArray2D creates a 2D array
 func NewNdArray2D(runtime *Runtime, dim0, dim1 uint32, elemType DataType) (*NdArray, error) {
 	return NewNdArray(runtime, []uint32{dim0, dim1}, elemType)
 }
 
-// NewNdArray3D 创建3D数组
+// NewNdArray3D creates a 3D array
 func NewNdArray3D(runtime *Runtime, dim0, dim1, dim2 uint32, elemType DataType) (*NdArray, error) {
 	return NewNdArray(runtime, []uint32{dim0, dim1, dim2}, elemType)
 }
 
-// NewNdArray 创建N维数组
+// NewNdArray creates an N-dimensional array
 func NewNdArray(runtime *Runtime, shape []uint32, elemType DataType) (*NdArray, error) {
 	if len(shape) == 0 || len(shape) > 16 {
-		return nil, fmt.Errorf("维度数量必须在1-16之间")
+		return nil, fmt.Errorf("number of dimensions must be between 1 and 16")
 	}
 
-	// 计算总元素数和内存大小
+	// Calculate total element count and memory size
 	elemSize := getElemSize(elemType)
 	totalElems := uint64(1)
 	for _, dim := range shape {
 		if dim == 0 {
-			return nil, fmt.Errorf("维度大小不能为0")
+			return nil, fmt.Errorf("dimension size cannot be 0")
 		}
 		totalElems *= uint64(dim)
 	}
 	size := totalElems * uint64(elemSize)
 
-	// 分配内存
+	// Allocate memory
 	memory, err := NewMemory(runtime, size)
 	if err != nil {
 		return nil, err
@@ -59,17 +59,17 @@ func NewNdArray(runtime *Runtime, shape []uint32, elemType DataType) (*NdArray, 
 	}, nil
 }
 
-// Shape 获取数组形状
+// Shape gets the array shape
 func (arr *NdArray) Shape() []uint32 {
 	return arr.shape
 }
 
-// Ndim 获取维度数
+// Ndim gets the number of dimensions
 func (arr *NdArray) Ndim() int {
 	return len(arr.shape)
 }
 
-// TotalElements 获取总元素数
+// TotalElements gets the total number of elements
 func (arr *NdArray) TotalElements() uint64 {
 	total := uint64(1)
 	for _, dim := range arr.shape {
@@ -78,20 +78,20 @@ func (arr *NdArray) TotalElements() uint64 {
 	return total
 }
 
-// ElemType 获取元素类型
+// ElemType gets the element type
 func (arr *NdArray) ElemType() DataType {
 	return arr.elemType
 }
 
-// ElemSize 获取元素大小（字节）
+// ElemSize gets the element size (bytes)
 func (arr *NdArray) ElemSize() int {
 	return arr.elemSize
 }
 
-// AsSliceFloat32 将数组映射为float32切片（仅限float32类型）
+// AsSliceFloat32 maps the array as a float32 slice (float32 type only)
 func (arr *NdArray) AsSliceFloat32() ([]float32, error) {
 	if arr.elemType != DataTypeF32 {
-		return nil, fmt.Errorf("数组类型不是float32")
+		return nil, fmt.Errorf("array type is not float32")
 	}
 
 	ptr, err := arr.Map()
@@ -103,10 +103,10 @@ func (arr *NdArray) AsSliceFloat32() ([]float32, error) {
 	return unsafe.Slice((*float32)(ptr), length), nil
 }
 
-// AsSliceInt32 将数组映射为int32切片（仅限int32类型）
+// AsSliceInt32 maps the array as an int32 slice (int32 type only)
 func (arr *NdArray) AsSliceInt32() ([]int32, error) {
 	if arr.elemType != DataTypeI32 {
-		return nil, fmt.Errorf("数组类型不是int32")
+		return nil, fmt.Errorf("array type is not int32")
 	}
 
 	ptr, err := arr.Map()
@@ -118,10 +118,10 @@ func (arr *NdArray) AsSliceInt32() ([]int32, error) {
 	return unsafe.Slice((*int32)(ptr), length), nil
 }
 
-// AsSliceUint8 将数组映射为uint8切片（仅限uint8类型）
+// AsSliceUint8 maps the array as a uint8 slice (uint8 type only)
 func (arr *NdArray) AsSliceUint8() ([]uint8, error) {
 	if arr.elemType != DataTypeU8 {
-		return nil, fmt.Errorf("数组类型不是uint8")
+		return nil, fmt.Errorf("array type is not uint8")
 	}
 
 	ptr, err := arr.Map()
@@ -133,7 +133,7 @@ func (arr *NdArray) AsSliceUint8() ([]uint8, error) {
 	return unsafe.Slice((*uint8)(ptr), length), nil
 }
 
-// Fill 填充数组（float32）
+// Fill fills the array (float32)
 func (arr *NdArray) Fill(value float32) error {
 	data, err := arr.AsSliceFloat32()
 	if err != nil {
@@ -147,7 +147,7 @@ func (arr *NdArray) Fill(value float32) error {
 	return nil
 }
 
-// FillInt32 填充数组（int32）
+// FillInt32 fills the array (int32)
 func (arr *NdArray) FillInt32(value int32) error {
 	data, err := arr.AsSliceInt32()
 	if err != nil {
@@ -161,7 +161,7 @@ func (arr *NdArray) FillInt32(value int32) error {
 	return nil
 }
 
-// getElemSize 获取元素大小
+// getElemSize gets the element size
 func getElemSize(elemType DataType) int {
 	switch elemType {
 	case DataTypeI8, DataTypeU8:
@@ -173,6 +173,6 @@ func getElemSize(elemType DataType) int {
 	case DataTypeI64, DataTypeU64, DataTypeF64:
 		return 8
 	default:
-		return 4 // 默认4字节
+		return 4 // Default 4 bytes
 	}
 }

@@ -5,43 +5,43 @@ import (
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
-// Sampler 采样器抽象
+// Sampler sampler abstraction
 //
-// 采样器定义了如何从纹理中采样像素值，包括过滤模式、寻址模式等。
-// 注意：大部分后端不支持自定义采样器，会使用默认采样器。
+// Samplers define how to sample pixel values from textures, including filter modes, addressing modes, etc.
+// Note: Most backends do not support custom samplers and will use the default sampler.
 type Sampler struct {
 	runtime *Runtime
 	handle  c_api.TiSampler
 }
 
-// SamplerCreateInfo 采样器创建信息
+// SamplerCreateInfo sampler creation information
 type SamplerCreateInfo struct {
-	// 放大过滤模式
+	// Magnification filter mode
 	MagFilter c_api.TiFilter
-	// 缩小过滤模式
+	// Minification filter mode
 	MinFilter c_api.TiFilter
-	// 寻址模式 U 方向
+	// Addressing mode U direction
 	AddressModeU c_api.TiAddressMode
-	// 寻址模式 V 方向
+	// Addressing mode V direction
 	AddressModeV c_api.TiAddressMode
-	// 寻址模式 W 方向
+	// Addressing mode W direction
 	AddressModeW c_api.TiAddressMode
 }
 
-// NewSampler 创建新的采样器
+// NewSampler creates a new sampler
 //
-// 注意：大部分后端不支持自定义采样器，此函数可能会失败。
-// 在这种情况下，请使用 TI_NULL_HANDLE 作为默认采样器。
+// Note: Most backends do not support custom samplers, this function may fail.
+// In that case, please use TI_NULL_HANDLE as the default sampler.
 //
-// 参数：
-//   - runtime: Taichi 运行时
-//   - createInfo: 采样器创建信息
+// Parameters:
+//   - runtime: Taichi runtime
+//   - createInfo: Sampler creation information
 //
-// 返回：
-//   - *Sampler: 创建的采样器对象
-//   - error: 如果创建失败
+// Returns:
+//   - *Sampler: Created sampler object
+//   - error: If creation fails
 //
-// 示例：
+// Example:
 //
 //	info := &taichi.SamplerCreateInfo{
 //	    MagFilter:     taichi.FILTER_LINEAR,
@@ -52,21 +52,21 @@ type SamplerCreateInfo struct {
 //	}
 //	sampler, err := taichi.NewSampler(runtime, info)
 //	if err != nil {
-//	    // 大部分后端不支持，使用默认采样器
-//	    fmt.Println("使用默认采样器")
+//	    // Most backends don't support it, use default sampler
+//	    fmt.Println("Using default sampler")
 //	    sampler = nil
 //	}
 func NewSampler(runtime *Runtime, createInfo *SamplerCreateInfo) (*Sampler, error) {
 	cInfo := &c_api.TiSamplerCreateInfo{
 		MagFilter:   createInfo.MagFilter,
 		MinFilter:   createInfo.MinFilter,
-		AddressMode: createInfo.AddressModeU, // 使用 U 作为统一地址模式
+		AddressMode: createInfo.AddressModeU, // Use U as unified address mode
 	}
 
 	handle := c_api.CreateSampler(runtime.handle, cInfo)
 	if handle == c_api.TI_NULL_HANDLE {
 		errCode, errMsg := c_api.GetLastError()
-		return nil, fmt.Errorf("创建采样器失败 [%d]: %s (提示：大部分后端不支持自定义采样器)", errCode, errMsg)
+		return nil, fmt.Errorf("failed to create sampler [%d]: %s (note: most backends do not support custom samplers)", errCode, errMsg)
 	}
 
 	return &Sampler{
@@ -75,7 +75,7 @@ func NewSampler(runtime *Runtime, createInfo *SamplerCreateInfo) (*Sampler, erro
 	}, nil
 }
 
-// Release 释放采样器
+// Release releases the sampler
 func (s *Sampler) Release() {
 	if s.handle != c_api.TI_NULL_HANDLE {
 		c_api.DestroySampler(s.runtime.handle, s.handle)
@@ -83,7 +83,7 @@ func (s *Sampler) Release() {
 	}
 }
 
-// Handle 获取底层句柄（用于创建纹理）
+// Handle gets the underlying handle (for creating textures)
 func (s *Sampler) Handle() c_api.TiSampler {
 	if s == nil {
 		return c_api.TI_NULL_HANDLE
@@ -91,7 +91,7 @@ func (s *Sampler) Handle() c_api.TiSampler {
 	return s.handle
 }
 
-// IsValid 检查采样器是否有效
+// IsValid checks if the sampler is valid
 func (s *Sampler) IsValid() bool {
 	return s != nil && s.handle != c_api.TI_NULL_HANDLE
 }

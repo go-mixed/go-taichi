@@ -1,16 +1,16 @@
-# Go 与 C 结构体对齐问题
+# Go and C Struct Alignment Issues
 
-## 问题概述
+## Overview
 
-在使用 `purego` 进行 Go-C FFI 调用时，必须确保 Go 结构体的内存布局与 C 结构体**完全一致**。即使字段顺序和类型正确，对齐（alignment）、填充（padding）、字段顺序或缺失字段的差异都会导致 C 代码读取错误的内存位置。
+When using `purego` for Go-C FFI calls, it is critical to ensure that Go struct memory layouts **exactly match** their C counterparts. Even with correct field order and types, differences in alignment, padding, field ordering, or missing fields will cause C code to read from incorrect memory locations.
 
 ---
 
-## 常见问题类型
+## Common Issue Types
 
-### 1. Union 的大小计算
+### 1. Union Size Calculation
 
-**C 语言中的 Union：**
+**C Union:**
 ```c
 typedef union TiArgumentValue {
   int32_t i32;              // 4 bytes
@@ -21,131 +21,131 @@ typedef union TiArgumentValue {
 } TiArgumentValue;
 ```
 
-Union 的大小等于**最大成员的大小**，在这个例子中是 `TiNdArray` (152 bytes)。
+Union size equals the **size of the largest member**, which in this case is `TiNdArray` (152 bytes).
 
-**错误的 Go 实现：**
+**Incorrect Go Implementation:**
 ```go
 type TiArgumentValue struct {
-    Data [512]byte  // ❌ 错误：随意设置的大小
+    Data [512]byte  // ❌ Wrong: arbitrary size
 }
 ```
 
-**正确的 Go 实现：**
+**Correct Go Implementation:**
 ```go
 type TiArgumentValue struct {
-    Data [152]byte  // ✅ 正确：与 C union 的实际大小匹配
+    Data [152]byte  // ✅ Correct: matches actual C union size
 }
 ```
 
 ---
 
-### 2. 结构体字段间的隐式 Padding
+### 2. Implicit Padding Between Struct Fields
 
-**C 结构体：**
+**C Struct:**
 ```c
 typedef struct TiArgument {
   TiArgumentType type;      // 4 bytes, offset 0
-  // 隐式 padding: 4 bytes  // C 编译器自动插入
+  // implicit padding: 4 bytes  // Automatically inserted by C compiler
   TiArgumentValue value;    // 152 bytes, offset 8
 } TiArgument;
-// 总大小：160 bytes
+// Total size: 160 bytes
 ```
 
-C 编译器会自动插入 padding 以满足对齐要求。`TiArgumentValue` 包含 `TiNdArray`，其中 `Memory` 字段是 `uintptr`（8字节对齐），因此 C 编译器将 `value` 字段对齐到 8 字节边界。
+The C compiler automatically inserts padding to satisfy alignment requirements. `TiArgumentValue` contains `TiNdArray`, which has a `Memory` field of type `uintptr` (8-byte aligned), so the C compiler aligns the `value` field to an 8-byte boundary.
 
-**错误的 Go 实现：**
+**Incorrect Go Implementation:**
 ```go
 type TiArgument struct {
     Type  TiArgumentType   // 4 bytes, offset 0
-    Value TiArgumentValue  // 152 bytes, offset 4 ❌ 错误的 offset
+    Value TiArgumentValue  // 152 bytes, offset 4 ❌ Wrong offset
 }
-// 总大小：156 bytes ❌
+// Total size: 156 bytes ❌
 ```
 
-**正确的 Go 实现：**
+**Correct Go Implementation:**
 ```go
 type TiArgument struct {
     Type  TiArgumentType   // 4 bytes, offset 0
-    _     [4]byte          // 显式 padding
+    _     [4]byte          // Explicit padding
     Value TiArgumentValue  // 152 bytes, offset 8 ✅
 }
-// 总大小：160 bytes ✅
+// Total size: 160 bytes ✅
 ```
 
-## 验证工具
+## Verification Tools
 
-### 使用完整验证工具
+### Using Complete Verification Tools
 
-项目提供了完整的验证工具来检查所有结构体：
+The project provides complete verification tools to check all structs:
 
-**运行 Go 验证：**
+**Run Go Verification:**
 ```bash
 cd examples
 go run 99_struct_alignment.go > go_output.txt
 ```
 
-**编译并运行 C 验证：**
+**Compile and Run C Verification:**
 ```bash
 cd examples
 gcc -I../taichi/c_api/include 99_struct_alignment.c -o verify_structs.exe
 ./verify_structs.exe > c_output.txt
 ```
 
-**对比结果：**
+**Compare Results:**
 ```bash
 diff go_output.txt c_output.txt
 ```
 
-如果有差异，说明结构体定义不匹配，需要修复！
+If there are differences, it means the struct definitions don't match and need to be fixed!
 
 
-## 相关文件
+## Related Files
 
-- `taichi/c_api/types.go` - Go 结构体定义
-- `taichi/c_api/include/taichi/taichi_core.h` - C 结构体定义（权威来源）
-- `examples/99_struct_alignment.go` - Go 验证工具
-- `examples/99_struct_alignment.c` - C 验证工具
-- `STRUCT_MISMATCH_ISSUE.md` - 已发现问题的详细记录
+- `taichi/c_api/types.go` - Go struct definitions
+- `taichi/c_api/include/taichi/taichi_core.h` - C struct definitions (authoritative source)
+- `examples/99_struct_alignment.go` - Go verification tool
+- `examples/99_struct_alignment.c` - C verification tool
+- `STRUCT_MISMATCH_ISSUE.md` - Detailed record of discovered issues
 
-## 对齐规则速查
+## Alignment Rules Quick Reference
 
-### 基本规则
+### Basic Rules
 
-1. **字段对齐**：每个字段必须对齐到其自然对齐边界
-   - `uint32`: 4 字节对齐
-   - `uint64`: 8 字节对齐
-   - `uintptr`: 8 字节对齐（64位系统）
-   - `float32`: 4 字节对齐
+1. **Field Alignment**: Each field must be aligned to its natural alignment boundary
+   - `uint32`: 4-byte aligned
+   - `uint64`: 8-byte aligned
+   - `uintptr`: 8-byte aligned (on 64-bit systems)
+   - `float32`: 4-byte aligned
 
-2. **结构体对齐**：结构体的对齐要求 = 最大成员的对齐要求
+2. **Struct Alignment**: Struct alignment requirement = alignment requirement of largest member
 
-3. **结构体大小**：结构体总大小必须是其对齐要求的倍数
+3. **Struct Size**: Total struct size must be a multiple of its alignment requirement
 
-### 示例
+### Examples
 
 ```go
-// 示例 1: 需要 padding
+// Example 1: Requires padding
 type Example1 struct {
     A uint32   // 4 bytes, offset 0
     _  [4]byte // padding
     B uint64   // 8 bytes, offset 8
 }
-// 总大小: 16 bytes
+// Total size: 16 bytes
 
-// 示例 2: 不需要 padding
+// Example 2: No padding needed
 type Example2 struct {
     A uint64   // 8 bytes, offset 0
     B uint32   // 4 bytes, offset 8
     C uint32   // 4 bytes, offset 12
 }
-// 总大小: 16 bytes
+// Total size: 16 bytes
 ```
 
 ---
 
-## 参考资料
+## References
 
-- [Go unsafe 包文档](https://pkg.go.dev/unsafe)
-- [C 结构体对齐规则](https://en.cppreference.com/w/c/language/object#Alignment)
-- [Purego FFI 文档](https://github.com/ebitengine/purego)
-- [Taichi C-API 文档](https://docs.taichi-lang.org/docs/taichi_core)
+- [Go unsafe Package Documentation](https://pkg.go.dev/unsafe)
+- [C Struct Alignment Rules](https://en.cppreference.com/w/c/language/object#Alignment)
+- [Purego FFI Documentation](https://github.com/ebitengine/purego)
+- [Taichi C-API Documentation](https://docs.taichi-lang.org/docs/taichi_core)

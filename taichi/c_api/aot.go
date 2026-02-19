@@ -6,7 +6,7 @@ import (
 	"github.com/ebitengine/purego"
 )
 
-// ===== AOT模块函数指针 =====
+// ===== AOT Module Function Pointers =====
 
 var (
 	tiLoadAotModule            func(runtime TiRuntime, modulePath *byte) TiAotModule
@@ -20,7 +20,7 @@ var (
 	tiWait                     func(runtime TiRuntime)
 )
 
-// registerAotFunctions 注册AOT模块函数
+// registerAotFunctions registers AOT module functions
 func registerAotFunctions() error {
 	purego.RegisterLibFunc(&tiLoadAotModule, libHandle, "ti_load_aot_module")
 	purego.RegisterLibFunc(&tiCreateAotModule, libHandle, "ti_create_aot_module")
@@ -34,22 +34,22 @@ func registerAotFunctions() error {
 	return nil
 }
 
-// ===== 导出的AOT模块函数 =====
+// ===== Exported AOT Module Functions =====
 
-// LoadAotModule 从文件系统加载预编译的AOT模块
+// LoadAotModule loads a precompiled AOT module from the filesystem
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - modulePath: AOT模块路径,应指向包含metadata.json的目录
+// Parameters:
+//   - runtime: Runtime handle
+//   - modulePath: Path to the AOT module, should point to a directory containing metadata.json
 //
-// 返回:
-//   - AOT模块句柄,如果加载失败则返回TI_NULL_HANDLE
+// Returns:
+//   - AOT module handle, or TI_NULL_HANDLE if loading fails
 //
-// 示例:
+// Example:
 //
 //	module := taichi.LoadAotModule(runtime, "/path/to/aot/module")
 //	if module == taichi.TI_NULL_HANDLE {
-//	    log.Fatal("加载AOT模块失败")
+//	    log.Fatal("Failed to load AOT module")
 //	}
 //	defer taichi.DestroyAotModule(module)
 func LoadAotModule(runtime TiRuntime, modulePath string) TiAotModule {
@@ -57,89 +57,89 @@ func LoadAotModule(runtime TiRuntime, modulePath string) TiAotModule {
 	return tiLoadAotModule(runtime, &cPath[0])
 }
 
-// CreateAotModule 从TCM数据创建预编译的AOT模块
+// CreateAotModule creates a precompiled AOT module from TCM data
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - tcm: TCM数据指针
-//   - size: TCM数据大小
+// Parameters:
+//   - runtime: Runtime handle
+//   - tcm: Pointer to TCM data
+//   - size: Size of TCM data
 //
-// 返回:
-//   - AOT模块句柄,如果创建失败则返回TI_NULL_HANDLE
+// Returns:
+//   - AOT module handle, or TI_NULL_HANDLE if creation fails
 //
-// 示例:
+// Example:
 //
-//	tcmData := loadTCMData() // 加载TCM数据
+//	tcmData := loadTCMData() // Load TCM data
 //	module := taichi.CreateAotModule(runtime, unsafe.Pointer(&tcmData[0]), uint64(len(tcmData)))
 //	defer taichi.DestroyAotModule(module)
 func CreateAotModule(runtime TiRuntime, tcm unsafe.Pointer, size uint64) TiAotModule {
 	return tiCreateAotModule(runtime, tcm, size)
 }
 
-// DestroyAotModule 销毁已加载的AOT模块并释放所有相关资源
+// DestroyAotModule destroys a loaded AOT module and frees all associated resources
 //
-// 参数:
-//   - aotModule: 要销毁的AOT模块句柄
+// Parameters:
+//   - aotModule: AOT module handle to destroy
 //
-// 注意:确保没有与该模块相关的kernel或compute graph等待flush。
+// Note: Ensure no kernels or compute graphs associated with this module are waiting to flush.
 //
-// 示例:
+// Example:
 //
 //	taichi.DestroyAotModule(module)
 func DestroyAotModule(aotModule TiAotModule) {
 	tiDestroyAotModule(aotModule)
 }
 
-// GetAotModuleKernel 从AOT模块检索预编译的Taichi kernel
+// GetAotModuleKernel retrieves a precompiled Taichi kernel from an AOT module
 //
-// 参数:
-//   - aotModule: AOT模块句柄
-//   - name: kernel名称
+// Parameters:
+//   - aotModule: AOT module handle
+//   - name: Kernel name
 //
-// 返回:
-//   - kernel句柄,如果模块没有指定名称的kernel则返回TI_NULL_HANDLE
+// Returns:
+//   - Kernel handle, or TI_NULL_HANDLE if the module doesn't have a kernel with the specified name
 //
-// 示例:
+// Example:
 //
 //	kernel := taichi.GetAotModuleKernel(module, "my_kernel")
 //	if kernel == taichi.TI_NULL_HANDLE {
-//	    log.Fatal("未找到kernel: my_kernel")
+//	    log.Fatal("Kernel not found: my_kernel")
 //	}
 func GetAotModuleKernel(aotModule TiAotModule, name string) TiKernel {
 	cName := append([]byte(name), 0)
 	return tiGetAotModuleKernel(aotModule, &cName[0])
 }
 
-// GetAotModuleComputeGraph 从AOT模块检索预编译的compute graph
+// GetAotModuleComputeGraph retrieves a precompiled compute graph from an AOT module
 //
-// 参数:
-//   - aotModule: AOT模块句柄
-//   - name: compute graph名称
+// Parameters:
+//   - aotModule: AOT module handle
+//   - name: Compute graph name
 //
-// 返回:
-//   - compute graph句柄,如果模块没有指定名称的compute graph则返回TI_NULL_HANDLE
+// Returns:
+//   - Compute graph handle, or TI_NULL_HANDLE if the module doesn't have a compute graph with the specified name
 //
-// 示例:
+// Example:
 //
 //	graph := taichi.GetAotModuleComputeGraph(module, "my_graph")
 //	if graph == taichi.TI_NULL_HANDLE {
-//	    log.Fatal("未找到compute graph: my_graph")
+//	    log.Fatal("Compute graph not found: my_graph")
 //	}
 func GetAotModuleComputeGraph(aotModule TiAotModule, name string) TiComputeGraph {
 	cName := append([]byte(name), 0)
 	return tiGetAotModuleComputeGraph(aotModule, &cName[0])
 }
 
-// LaunchKernel 使用提供的参数启动Taichi kernel
+// LaunchKernel launches a Taichi kernel with the provided arguments
 //
-// 参数必须与源代码中的数量、类型和顺序相同。这是一个设备命令。
+// Arguments must match the number, type, and order in the source code. This is a device command.
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - kernel: kernel句柄
-//   - args: 参数数组
+// Parameters:
+//   - runtime: Runtime handle
+//   - kernel: Kernel handle
+//   - args: Argument array
 //
-// 示例:
+// Example:
 //
 //	args := []taichi.TiArgument{
 //	    taichi.NewArgumentI32(123),
@@ -157,16 +157,16 @@ func LaunchKernel(runtime TiRuntime, kernel TiKernel, args []TiArgument) {
 	tiLaunchKernel(runtime, kernel, uint32(len(args)), &args[0])
 }
 
-// LaunchComputeGraph 使用提供的命名参数启动Taichi compute graph
+// LaunchComputeGraph launches a Taichi compute graph with the provided named arguments
 //
-// 命名参数必须与源代码中的数量、名称和类型相同。这是一个设备命令。
+// Named arguments must match the number, names, and types in the source code. This is a device command.
 //
-// 参数:
-//   - runtime: 运行时句柄
-//   - computeGraph: compute graph句柄
-//   - args: 命名参数数组
+// Parameters:
+//   - runtime: Runtime handle
+//   - computeGraph: Compute graph handle
+//   - args: Named argument array
 //
-// 示例:
+// Example:
 //
 //	args := []taichi.TiNamedArgument{
 //	    taichi.NewNamedArgument("foo", taichi.NewArgumentI32(123)),
@@ -183,12 +183,12 @@ func LaunchComputeGraph(runtime TiRuntime, computeGraph TiComputeGraph, args []T
 	tiLaunchComputeGraph(runtime, computeGraph, uint32(len(args)), &args[0])
 }
 
-// Flush 将之前调用的所有设备命令提交到目标设备执行
+// Flush submits all previously called device commands to the target device for execution
 //
-// 参数:
-//   - runtime: 运行时句柄
+// Parameters:
+//   - runtime: Runtime handle
 //
-// 示例:
+// Example:
 //
 //	taichi.LaunchKernel(runtime, kernel, args)
 //	taichi.Flush(runtime)
@@ -196,14 +196,14 @@ func Flush(runtime TiRuntime) {
 	tiFlush(runtime)
 }
 
-// Wait 等待之前调用的所有设备命令执行完成
+// Wait waits for all previously called device commands to complete execution
 //
-// 任何已调用但未提交的命令将首先提交。
+// Any called but not yet submitted commands will be submitted first.
 //
-// 参数:
-//   - runtime: 运行时句柄
+// Parameters:
+//   - runtime: Runtime handle
 //
-// 示例:
+// Example:
 //
 //	taichi.LaunchKernel(runtime, kernel, args)
 //	taichi.Flush(runtime)

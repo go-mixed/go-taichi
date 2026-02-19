@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-// Memory 内存基类
+// Memory base class for memory
 type Memory struct {
 	runtime *Runtime
 	handle  c_api.TiMemory
@@ -15,7 +15,7 @@ type Memory struct {
 	ptr     unsafe.Pointer
 }
 
-// NewMemory 创建新的内存对象
+// NewMemory creates a new memory object
 func NewMemory(tiRuntime *Runtime, size uint64) (*Memory, error) {
 	allocInfo := c_api.TiMemoryAllocateInfo{
 		Size:      size,
@@ -27,7 +27,7 @@ func NewMemory(tiRuntime *Runtime, size uint64) (*Memory, error) {
 	handle := c_api.AllocateMemory(tiRuntime.handle, &allocInfo)
 	if handle == c_api.TI_NULL_HANDLE {
 		errCode, errMsg := c_api.GetLastError()
-		return nil, fmt.Errorf("内存分配失败 [%d]: %s", errCode, errMsg)
+		return nil, fmt.Errorf("memory allocation failed [%d]: %s", errCode, errMsg)
 	}
 
 	m := &Memory{
@@ -41,7 +41,7 @@ func NewMemory(tiRuntime *Runtime, size uint64) (*Memory, error) {
 	return m, nil
 }
 
-// Release 释放内存
+// Release releases memory
 func (m *Memory) Release() {
 	if m.mapped {
 		m.Unmap()
@@ -52,7 +52,7 @@ func (m *Memory) Release() {
 	}
 }
 
-// Map 映射内存到主机
+// Map maps memory to host
 func (m *Memory) Map() (unsafe.Pointer, error) {
 	if m.mapped {
 		return m.ptr, nil
@@ -60,7 +60,7 @@ func (m *Memory) Map() (unsafe.Pointer, error) {
 
 	ptr := c_api.MapMemory(m.runtime.handle, m.handle)
 	if ptr == nil {
-		return nil, fmt.Errorf("内存映射失败")
+		return nil, fmt.Errorf("memory mapping failed")
 	}
 
 	m.ptr = ptr
@@ -68,7 +68,7 @@ func (m *Memory) Map() (unsafe.Pointer, error) {
 	return ptr, nil
 }
 
-// Unmap 取消内存映射
+// Unmap unmaps memory
 func (m *Memory) Unmap() {
 	if m.mapped {
 		c_api.UnmapMemory(m.runtime.handle, m.handle)
@@ -77,25 +77,25 @@ func (m *Memory) Unmap() {
 	}
 }
 
-// Size 获取内存大小
+// Size gets memory size
 func (m *Memory) Size() uint64 {
 	return m.size
 }
 
-// IsMapped 检查是否已映射
+// IsMapped checks if memory is mapped
 func (m *Memory) IsMapped() bool {
 	return m.mapped
 }
 
-// Handle 获取底层句柄（用于内部或测试）
+// Handle gets the underlying handle (for internal use or testing)
 func (m *Memory) Handle() c_api.TiMemory {
 	return m.handle
 }
 
-// CopyTo 复制到另一个内存（设备端）
+// CopyTo copies to another memory (device-side)
 func (m *Memory) CopyTo(dst *Memory) error {
 	if m.size != dst.size {
-		return fmt.Errorf("内存大小不匹配: %d vs %d", m.size, dst.size)
+		return fmt.Errorf("memory size mismatch: %d vs %d", m.size, dst.size)
 	}
 
 	srcSlice := c_api.NewMemorySlice(m.handle, 0, m.size)
@@ -105,7 +105,7 @@ func (m *Memory) CopyTo(dst *Memory) error {
 	return nil
 }
 
-// CopyFrom 从另一个内存复制（设备端）
+// CopyFrom copies from another memory (device-side)
 func (m *Memory) CopyFrom(src *Memory) error {
 	return src.CopyTo(m)
 }

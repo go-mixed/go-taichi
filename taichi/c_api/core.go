@@ -2,7 +2,7 @@ package c_api
 
 import "github.com/ebitengine/purego"
 
-// ===== 核心函数指针 =====
+// ===== Core Function Pointers =====
 
 var (
 	tiGetVersion        func() uint32
@@ -13,7 +13,7 @@ var (
 	tiDestroyRuntime    func(runtime TiRuntime)
 )
 
-// registerCoreFunctions 注册核心函数
+// registerCoreFunctions registers core functions
 func registerCoreFunctions() error {
 	purego.RegisterLibFunc(&tiGetVersion, libHandle, "ti_get_version")
 	purego.RegisterLibFunc(&tiGetAvailableArchs, libHandle, "ti_get_available_archs")
@@ -24,35 +24,35 @@ func registerCoreFunctions() error {
 	return nil
 }
 
-// ===== 导出的核心函数 =====
+// ===== Exported Core Functions =====
 
-// GetVersion 获取Taichi C-API版本
+// GetVersion gets the Taichi C-API version
 //
-// 返回值与taichi_core.h中定义的TI_C_API_VERSION相同。
+// Returns the same value as TI_C_API_VERSION defined in taichi_core.h.
 //
-// 示例:
+// Example:
 //
 //	version := taichi.GetVersion()
-//	fmt.Printf("Taichi版本: %d\n", version)
+//	fmt.Printf("Taichi version: %d\n", version)
 func GetVersion() uint32 {
 	return tiGetVersion()
 }
 
-// GetAvailableArchs 获取当前平台上可用的架构列表
+// GetAvailableArchs gets the list of available architectures on the current platform
 //
-// 架构只有在以下情况下才可用:
-// 1. Runtime库编译时支持该架构
-// 2. 当前平台安装了相应的硬件或模拟软件
+// An architecture is available only if:
+// 1. The runtime library was compiled with support for that architecture
+// 2. The current platform has the corresponding hardware or emulation software installed
 //
-// 可用架构至少有一个设备可用,即设备索引0始终可用。
+// Available architectures have at least one device available, i.e., device index 0 is always available.
 //
-// 警告:返回架构的顺序未定义。
+// Warning: The order of returned architectures is undefined.
 //
-// 示例:
+// Example:
 //
 //	archs := taichi.GetAvailableArchs()
 //	for _, arch := range archs {
-//	    fmt.Printf("可用架构: %d\n", arch)
+//	    fmt.Printf("Available architecture: %d\n", arch)
 //	}
 func GetAvailableArchs() []TiArch {
 	var count uint32
@@ -67,15 +67,15 @@ func GetAvailableArchs() []TiArch {
 	return archs
 }
 
-// GetLastError 获取Taichi C-API调用引发的最后一个错误
+// GetLastError gets the last error raised by a Taichi C-API call
 //
-// 返回语义错误代码和文本错误消息。
+// Returns the semantic error code and text error message.
 //
-// 示例:
+// Example:
 //
 //	errCode, errMsg := taichi.GetLastError()
 //	if errCode != taichi.TI_ERROR_SUCCESS {
-//	    fmt.Printf("错误: %d - %s\n", errCode, errMsg)
+//	    fmt.Printf("Error: %d - %s\n", errCode, errMsg)
 //	}
 func GetLastError() (TiError, string) {
 	var size uint64
@@ -87,16 +87,16 @@ func GetLastError() (TiError, string) {
 
 	msg := make([]byte, size)
 	err = tiGetLastError(&size, &msg[0])
-	return err, string(msg[:size-1]) // 去掉null terminator
+	return err, string(msg[:size-1]) // Remove null terminator
 }
 
-// SetLastError 将提供的错误设置为Taichi C-API调用引发的最后一个错误
+// SetLastError sets the provided error as the last error raised by a Taichi C-API call
 //
-// 这在Taichi C-API包装器和辅助库的扩展验证程序中很有用。
+// This is useful in extended validators for Taichi C-API wrappers and helper libraries.
 //
-// 参数:
-//   - error: 语义错误代码
-//   - message: 文本错误消息的null结尾字符串,或空字符串表示空错误消息
+// Parameters:
+//   - error: Semantic error code
+//   - message: Null-terminated string for text error message, or empty string for no error message
 func SetLastError(error TiError, message string) {
 	if message == "" {
 		tiSetLastError(error, nil)
@@ -106,35 +106,35 @@ func SetLastError(error TiError, message string) {
 	tiSetLastError(error, &msg[0])
 }
 
-// CreateRuntime 使用指定的架构创建Taichi运行时
+// CreateRuntime creates a Taichi runtime with the specified architecture
 //
-// 参数:
-//   - arch: Taichi运行时的架构
-//   - deviceIndex: 要在其上创建Taichi运行时的设备索引
+// Parameters:
+//   - arch: Architecture for the Taichi runtime
+//   - deviceIndex: Device index on which to create the Taichi runtime
 //
-// 返回:
-//   - 运行时句柄,如果创建失败则返回TI_NULL_HANDLE
+// Returns:
+//   - Runtime handle, or TI_NULL_HANDLE if creation fails
 //
-// 示例:
+// Example:
 //
 //	runtime := taichi.CreateRuntime(taichi.TI_ARCH_VULKAN, 0)
 //	if runtime == taichi.TI_NULL_HANDLE {
 //	    errCode, errMsg := taichi.GetLastError()
-//	    log.Fatalf("创建运行时失败: %d - %s", errCode, errMsg)
+//	    log.Fatalf("Failed to create runtime: %d - %s", errCode, errMsg)
 //	}
 //	defer taichi.DestroyRuntime(runtime)
 func CreateRuntime(arch TiArch, deviceIndex uint32) TiRuntime {
 	return tiCreateRuntime(arch, deviceIndex)
 }
 
-// DestroyRuntime 销毁Taichi运行时
+// DestroyRuntime destroys a Taichi runtime
 //
-// 参数:
-//   - runtime: 要销毁的运行时句柄
+// Parameters:
+//   - runtime: Runtime handle to destroy
 //
-// 注意:销毁运行时之前,必须先销毁所有相关资源。
+// Note: All associated resources must be destroyed before destroying the runtime.
 //
-// 示例:
+// Example:
 //
 //	runtime := taichi.CreateRuntime(taichi.TI_ARCH_VULKAN, 0)
 //	defer taichi.DestroyRuntime(runtime)

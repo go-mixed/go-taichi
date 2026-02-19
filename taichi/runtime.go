@@ -6,39 +6,39 @@ import (
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
-// Runtime Taichi运行时的高级抽象
+// Runtime High-level abstraction for Taichi runtime
 type Runtime struct {
 	handle c_api.TiRuntime
 	arch   Arch
 }
 
-// NewRuntime 创建新的运行时
+// NewRuntime creates a new runtime
 //
-// 参数:
-//   - arch: 计算架构。如果为0，自动选择最佳架构
-//   - libDir: 动态库目录路径
-//   - 空字符串(""): 先在当前工作目录查找，找不到则在系统PATH中查找
-//   - 非空路径: 先在指定目录查找，找不到则在系统PATH中查找
+// Parameters:
+//   - arch: Compute architecture. If 0, automatically selects the best architecture
+//   - libDir: Dynamic library directory path
+//   - Empty string (""): Search in current working directory first, then in system PATH
+//   - Non-empty path: Search in specified directory first, then in system PATH
 func NewRuntime(arch Arch, libDir string) (*Runtime, error) {
-	// 初始化C-API
+	// Initialize C-API
 	if err := initial(libDir); err != nil {
-		return nil, fmt.Errorf("初始化失败: %w", err)
+		return nil, fmt.Errorf("initialization failed: %w", err)
 	}
 
-	// 如果未指定架构，自动选择
+	// If architecture not specified, auto-select
 	if arch == 0 {
 		archs := GetAvailableArchs()
 		if len(archs) == 0 {
-			return nil, fmt.Errorf("没有可用的计算架构")
+			return nil, fmt.Errorf("no available compute architectures")
 		}
 		arch = selectBestArch(archs)
 	}
 
-	// 创建运行时
+	// Create runtime
 	handle := c_api.CreateRuntime(arch, 0)
 	if handle == c_api.TI_NULL_HANDLE {
 		errCode, errMsg := c_api.GetLastError()
-		return nil, fmt.Errorf("创建运行时失败 [%d]: %s", errCode, errMsg)
+		return nil, fmt.Errorf("failed to create runtime [%d]: %s", errCode, errMsg)
 	}
 
 	return &Runtime{
@@ -47,19 +47,19 @@ func NewRuntime(arch Arch, libDir string) (*Runtime, error) {
 	}, nil
 }
 
-// NewRuntimeAuto 自动选择最佳架构创建运行时
+// NewRuntimeAuto automatically selects the best architecture to create runtime
 //
-// 参数:
-//   - libDir: 动态库目录路径
-//   - 空字符串(""): 先在当前工作目录查找，找不到则在系统PATH中查找
-//   - 非空路径: 先在指定目录查找，找不到则在系统PATH中查找
+// Parameters:
+//   - libDir: Dynamic library directory path
+//   - Empty string (""): Search in current working directory first, then in system PATH
+//   - Non-empty path: Search in specified directory first, then in system PATH
 //
-// 架构选择优先级: Vulkan > CUDA > x64 > ARM64 > OpenGL
+// Architecture selection priority: Vulkan > CUDA > x64 > ARM64 > OpenGL
 func NewRuntimeAuto(libDir string) (*Runtime, error) {
 	return NewRuntime(0, libDir)
 }
 
-// Release 释放运行时资源
+// Release releases runtime resources
 func (r *Runtime) Release() {
 	if r.handle != c_api.TI_NULL_HANDLE {
 		c_api.DestroyRuntime(r.handle)
@@ -67,31 +67,31 @@ func (r *Runtime) Release() {
 	}
 }
 
-// Arch 获取当前架构
+// Arch gets the current architecture
 func (r *Runtime) Arch() Arch {
 	return r.arch
 }
 
-// ArchName 获取架构名称
+// ArchName gets the architecture name
 func (r *Runtime) ArchName() string {
 	return getArchName(r.arch)
 }
 
-// Wait 等待所有提交的任务完成
-// 用于异步执行后等待所有任务完成
+// Wait waits for all submitted tasks to complete
+// Used to wait for all tasks to complete after asynchronous execution
 func (r *Runtime) Wait() {
 	c_api.Wait(r.handle)
 }
 
-// Flush 刷新命令队列
-// 确保所有提交的命令被发送到设备执行
+// Flush flushes the command queue
+// Ensures all submitted commands are sent to the device for execution
 func (r *Runtime) Flush() {
 	c_api.Flush(r.handle)
 }
 
-// selectBestArch 选择最佳架构
+// selectBestArch selects the best architecture
 func selectBestArch(archs []Arch) Arch {
-	// 优先级: Vulkan > CUDA > CPU
+	// Priority: Vulkan > CUDA > CPU
 	priority := []Arch{
 		ArchVulkan,
 		ArchCuda,
@@ -108,11 +108,11 @@ func selectBestArch(archs []Arch) Arch {
 		}
 	}
 
-	// 返回第一个可用的
+	// Return first available
 	return archs[0]
 }
 
-// getArchName 获取架构名称
+// getArchName gets the architecture name
 func getArchName(arch Arch) string {
 	switch arch {
 	case ArchVulkan:

@@ -2,17 +2,17 @@ package c_api
 
 import "unsafe"
 
-// ===== 参数构造辅助函数 =====
+// ===== Argument Construction Helper Functions =====
 
-// NewArgumentI32 创建int32类型的参数
+// NewArgumentI32 creates an int32 type argument
 //
-// 参数:
-//   - value: int32值
+// Parameters:
+//   - value: int32 value
 //
-// 返回:
+// Returns:
 //   - TiArgument
 //
-// 示例:
+// Example:
 //
 //	arg := taichi.NewArgumentI32(123)
 func NewArgumentI32(value int32) TiArgument {
@@ -23,15 +23,15 @@ func NewArgumentI32(value int32) TiArgument {
 	return arg
 }
 
-// NewArgumentF32 创建float32类型的参数
+// NewArgumentF32 creates a float32 type argument
 //
-// 参数:
-//   - value: float32值
+// Parameters:
+//   - value: float32 value
 //
-// 返回:
+// Returns:
 //   - TiArgument
 //
-// 示例:
+// Example:
 //
 //	arg := taichi.NewArgumentF32(456.0)
 func NewArgumentF32(value float32) TiArgument {
@@ -42,15 +42,15 @@ func NewArgumentF32(value float32) TiArgument {
 	return arg
 }
 
-// NewArgumentNdArray 创建NdArray类型的参数
+// NewArgumentNdArray creates an NdArray type argument
 //
-// 参数:
-//   - ndarray: TiNdArray结构
+// Parameters:
+//   - ndarray: TiNdArray structure
 //
-// 返回:
+// Returns:
 //   - TiArgument
 //
-// 示例:
+// Example:
 //
 //	ndarray := taichi.TiNdArray{
 //	    Memory: memory,
@@ -69,15 +69,15 @@ func NewArgumentNdArray(ndarray TiNdArray) TiArgument {
 	return arg
 }
 
-// NewArgumentTexture 创建纹理类型的参数
+// NewArgumentTexture creates a texture type argument
 //
-// 参数:
-//   - texture: TiTexture结构
+// Parameters:
+//   - texture: TiTexture structure
 //
-// 返回:
+// Returns:
 //   - TiArgument
 //
-// 示例:
+// Example:
 //
 //	texture := taichi.TiTexture{
 //	    Image:   image,
@@ -95,15 +95,15 @@ func NewArgumentTexture(texture TiTexture) TiArgument {
 	return arg
 }
 
-// NewArgumentScalar 创建标量类型的参数
+// NewArgumentScalar creates a scalar type argument
 //
-// 参数:
-//   - scalar: TiScalar结构
+// Parameters:
+//   - scalar: TiScalar structure
 //
-// 返回:
+// Returns:
 //   - TiArgument
 //
-// 示例:
+// Example:
 //
 //	scalar := taichi.TiScalar{
 //	    Type: taichi.TI_DATA_TYPE_F64,
@@ -118,22 +118,22 @@ func NewArgumentScalar(scalar TiScalar) TiArgument {
 	return arg
 }
 
-// ===== 命名参数辅助函数 =====
+// ===== Named Argument Helper Functions =====
 
-// NewNamedArgument 创建命名参数
+// NewNamedArgument creates a named argument
 //
-// 参数:
-//   - name: 参数名称
-//   - argument: 参数值
+// Parameters:
+//   - name: Argument name
+//   - argument: Argument value
 //
-// 返回:
+// Returns:
 //   - TiNamedArgument
 //
-// 注意:name字符串会被转换为C字符串(null结尾),
-// 返回的结构体中包含指向这个C字符串的指针。
-// 在使用命名参数期间,原始的name string必须保持有效。
+// Note: The name string will be converted to a C string (null-terminated),
+// and the returned structure contains a pointer to this C string.
+// The original name string must remain valid during the use of the named argument.
 //
-// 示例:
+// Example:
 //
 //	arg := taichi.NewNamedArgument("my_param", taichi.NewArgumentI32(123))
 func NewNamedArgument(name string, argument TiArgument) TiNamedArgument {
@@ -144,16 +144,16 @@ func NewNamedArgument(name string, argument TiArgument) TiNamedArgument {
 	}
 }
 
-// NewNamedArgumentWithCString 使用已经准备好的C字符串创建命名参数
+// NewNamedArgumentWithCString creates a named argument using a prepared C string
 //
-// 参数:
-//   - cName: C字符串指针(null结尾)
-//   - argument: 参数值
+// Parameters:
+//   - cName: C string pointer (null-terminated)
+//   - argument: Argument value
 //
-// 返回:
+// Returns:
 //   - TiNamedArgument
 //
-// 示例:
+// Example:
 //
 //	cName := append([]byte("my_param"), 0)
 //	arg := taichi.NewNamedArgumentWithCString(&cName[0], taichi.NewArgumentI32(123))
@@ -164,19 +164,19 @@ func NewNamedArgumentWithCString(cName *byte, argument TiArgument) TiNamedArgume
 	}
 }
 
-// ===== NdArray辅助函数 =====
+// ===== NdArray Helper Functions =====
 
-// NewNdArray1D 创建1维NdArray
+// NewNdArray1D creates a 1D NdArray
 //
-// 参数:
-//   - memory: 内存句柄
-//   - length: 数组长度
-//   - elemType: 元素类型
+// Parameters:
+//   - memory: Memory handle
+//   - length: Array length
+//   - elemType: Element type
 //
-// 返回:
+// Returns:
 //   - TiNdArray
 //
-// 示例:
+// Example:
 //
 //	ndarray := taichi.NewNdArray1D(memory, 256, taichi.TI_DATA_TYPE_F32)
 func NewNdArray1D(memory TiMemory, length uint32, elemType TiDataType) TiNdArray {
@@ -190,18 +190,18 @@ func NewNdArray1D(memory TiMemory, length uint32, elemType TiDataType) TiNdArray
 	}
 }
 
-// NewNdArray2D 创建2维NdArray
+// NewNdArray2D creates a 2D NdArray
 //
-// 参数:
-//   - memory: 内存句柄
-//   - rows: 行数
-//   - cols: 列数
-//   - elemType: 元素类型
+// Parameters:
+//   - memory: Memory handle
+//   - rows: Number of rows
+//   - cols: Number of columns
+//   - elemType: Element type
 //
-// 返回:
+// Returns:
 //   - TiNdArray
 //
-// 示例:
+// Example:
 //
 //	ndarray := taichi.NewNdArray2D(memory, 16, 16, taichi.TI_DATA_TYPE_F32)
 func NewNdArray2D(memory TiMemory, rows, cols uint32, elemType TiDataType) TiNdArray {
@@ -215,17 +215,17 @@ func NewNdArray2D(memory TiMemory, rows, cols uint32, elemType TiDataType) TiNdA
 	}
 }
 
-// NewNdArray3D 创建3维NdArray
+// NewNdArray3D creates a 3D NdArray
 //
-// 参数:
-//   - memory: 内存句柄
-//   - dim0, dim1, dim2: 三个维度的大小
-//   - elemType: 元素类型
+// Parameters:
+//   - memory: Memory handle
+//   - dim0, dim1, dim2: Sizes of the three dimensions
+//   - elemType: Element type
 //
-// 返回:
+// Returns:
 //   - TiNdArray
 //
-// 示例:
+// Example:
 //
 //	ndarray := taichi.NewNdArray3D(memory, 8, 8, 8, taichi.TI_DATA_TYPE_F32)
 func NewNdArray3D(memory TiMemory, dim0, dim1, dim2 uint32, elemType TiDataType) TiNdArray {
@@ -239,20 +239,20 @@ func NewNdArray3D(memory TiMemory, dim0, dim1, dim2 uint32, elemType TiDataType)
 	}
 }
 
-// ===== 图像辅助函数 =====
+// ===== Image Helper Functions =====
 
-// NewTexture2D 创建2D纹理
+// NewTexture2D creates a 2D texture
 //
-// 参数:
-//   - image: 图像句柄
-//   - sampler: 采样器句柄(可以是TI_NULL_HANDLE使用默认采样器)
-//   - width, height: 纹理尺寸
-//   - format: 纹理格式
+// Parameters:
+//   - image: Image handle
+//   - sampler: Sampler handle (can be TI_NULL_HANDLE to use default sampler)
+//   - width, height: Texture dimensions
+//   - format: Texture format
 //
-// 返回:
+// Returns:
 //   - TiTexture
 //
-// 示例:
+// Example:
 //
 //	texture := taichi.NewTexture2D(image, sampler, 1024, 1024, taichi.TI_FORMAT_RGBA8)
 func NewTexture2D(image TiImage, sampler TiSampler, width, height uint32, format TiFormat) TiTexture {
@@ -270,19 +270,19 @@ func NewTexture2D(image TiImage, sampler TiSampler, width, height uint32, format
 	}
 }
 
-// ===== 内存切片辅助函数 =====
+// ===== Memory Slice Helper Functions =====
 
-// NewMemorySlice 创建内存切片
+// NewMemorySlice creates a memory slice
 //
-// 参数:
-//   - memory: 内存句柄
-//   - offset: 偏移量(字节)
-//   - size: 大小(字节)
+// Parameters:
+//   - memory: Memory handle
+//   - offset: Offset (bytes)
+//   - size: Size (bytes)
 //
-// 返回:
+// Returns:
 //   - TiMemorySlice
 //
-// 示例:
+// Example:
 //
 //	slice := taichi.NewMemorySlice(memory, 0, 1024)
 func NewMemorySlice(memory TiMemory, offset, size uint64) TiMemorySlice {
@@ -293,16 +293,16 @@ func NewMemorySlice(memory TiMemory, offset, size uint64) TiMemorySlice {
 	}
 }
 
-// NewFullMemorySlice 创建完整内存切片(从头到尾)
+// NewFullMemorySlice creates a full memory slice (from start to end)
 //
-// 参数:
-//   - memory: 内存句柄
-//   - size: 完整大小(字节)
+// Parameters:
+//   - memory: Memory handle
+//   - size: Full size (bytes)
 //
-// 返回:
+// Returns:
 //   - TiMemorySlice
 //
-// 示例:
+// Example:
 //
 //	slice := taichi.NewFullMemorySlice(memory, 4096)
 func NewFullMemorySlice(memory TiMemory, size uint64) TiMemorySlice {

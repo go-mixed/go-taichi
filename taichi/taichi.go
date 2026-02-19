@@ -4,51 +4,51 @@ import (
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
-// initial 初始化Taichi
-// 必须在使用任何其他功能之前调用
+// initial initializes Taichi
+// Must be called before using any other functionality
 func initial(libDir string) error {
 	return c_api.Init(libDir)
 }
 
-// GetVersion 获取Taichi C-API版本
+// GetVersion gets the Taichi C-API version
 func GetVersion() uint32 {
 	if !c_api.Initialized() {
-		panic("taichi not initial")
+		panic("taichi not initialized")
 	}
 	return c_api.GetVersion()
 }
 
-// GetAvailableArchs 获取所有可用的计算架构
+// GetAvailableArchs gets all available compute architectures
 func GetAvailableArchs() []c_api.TiArch {
 	if !c_api.Initialized() {
-		panic("taichi not initial")
+		panic("taichi not initialized")
 	}
 	return c_api.GetAvailableArchs()
 }
 
-// ===== 类型导出（供高级API使用）=====
+// ===== Type Exports (for high-level API use) =====
 
-// Arch 架构类型
+// Arch architecture type
 type Arch = c_api.TiArch
 
-// DataType 数据类型
+// DataType data type
 type DataType = c_api.TiDataType
 
-// Format 图像格式
+// Format image format
 type Format = c_api.TiFormat
 
-// ImageLayout 图像布局
+// ImageLayout image layout
 type ImageLayout = c_api.TiImageLayout
 
-// Filter 过滤模式
+// Filter filter mode
 type Filter = c_api.TiFilter
 
-// AddressMode 寻址模式
+// AddressMode addressing mode
 type AddressMode = c_api.TiAddressMode
 
-// ===== 常用常量导出 =====
+// ===== Common Constant Exports =====
 
-// 架构常量
+// Architecture constants
 const (
 	ArchVulkan = c_api.TI_ARCH_VULKAN
 	ArchMetal  = c_api.TI_ARCH_METAL
@@ -58,7 +58,7 @@ const (
 	ArchOpengl = c_api.TI_ARCH_OPENGL
 )
 
-// 数据类型常量
+// Data type constants
 const (
 	DataTypeF16 = c_api.TI_DATA_TYPE_F16
 	DataTypeF32 = c_api.TI_DATA_TYPE_F32
@@ -73,7 +73,7 @@ const (
 	DataTypeU64 = c_api.TI_DATA_TYPE_U64
 )
 
-// 图像格式常量
+// Image format constants
 const (
 	FormatUnknown         = c_api.TI_FORMAT_UNKNOWN
 	FormatR8              = c_api.TI_FORMAT_R8
@@ -121,7 +121,7 @@ const (
 	FormatDepth32F        = c_api.TI_FORMAT_DEPTH32F
 )
 
-// 图像布局常量
+// Image layout constants
 const (
 	ImageLayoutUndefined       = c_api.TI_IMAGE_LAYOUT_UNDEFINED
 	ImageLayoutShaderRead      = c_api.TI_IMAGE_LAYOUT_SHADER_READ
@@ -134,13 +134,13 @@ const (
 	ImageLayoutPresentSrc      = c_api.TI_IMAGE_LAYOUT_PRESENT_SRC
 )
 
-// 过滤模式常量
+// Filter mode constants
 const (
 	FilterNearest = c_api.TI_FILTER_NEAREST
 	FilterLinear  = c_api.TI_FILTER_LINEAR
 )
 
-// 寻址模式常量
+// Addressing mode constants
 const (
 	AddressModeRepeat         = c_api.TI_ADDRESS_MODE_REPEAT
 	AddressModeMirroredRepeat = c_api.TI_ADDRESS_MODE_MIRRORED_REPEAT

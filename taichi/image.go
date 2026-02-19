@@ -5,7 +5,7 @@ import (
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
-// Image 图像抽象
+// Image image abstraction
 type Image struct {
 	runtime *Runtime
 	handle  c_api.TiImage
@@ -14,7 +14,7 @@ type Image struct {
 	format  Format
 }
 
-// NewImage2D 创建2D图像
+// NewImage2D creates a 2D image
 func NewImage2D(runtime *Runtime, width, height uint32, format Format) (*Image, error) {
 	allocInfo := c_api.TiImageAllocateInfo{
 		Dimension: c_api.TI_IMAGE_DIMENSION_2D,
@@ -35,7 +35,7 @@ func NewImage2D(runtime *Runtime, width, height uint32, format Format) (*Image, 
 	handle := c_api.AllocateImage(runtime.handle, &allocInfo)
 	if handle == c_api.TI_NULL_HANDLE {
 		errCode, errMsg := c_api.GetLastError()
-		return nil, fmt.Errorf("图像分配失败 [%d]: %s", errCode, errMsg)
+		return nil, fmt.Errorf("image allocation failed [%d]: %s", errCode, errMsg)
 	}
 
 	return &Image{
@@ -47,7 +47,7 @@ func NewImage2D(runtime *Runtime, width, height uint32, format Format) (*Image, 
 	}, nil
 }
 
-// Release 释放图像
+// Release releases the image
 func (img *Image) Release() {
 	if img.handle != c_api.TI_NULL_HANDLE {
 		c_api.FreeImage(img.runtime.handle, img.handle)
@@ -55,37 +55,37 @@ func (img *Image) Release() {
 	}
 }
 
-// Width 获取宽度
+// Width gets the width
 func (img *Image) Width() uint32 {
 	return img.width
 }
 
-// Height 获取高度
+// Height gets the height
 func (img *Image) Height() uint32 {
 	return img.height
 }
 
-// Format 获取格式
+// Format gets the format
 func (img *Image) Format() Format {
 	return img.format
 }
 
-// TransitionLayout 转换图像布局
+// TransitionLayout transitions the image layout
 func (img *Image) TransitionLayout(layout ImageLayout) {
 	c_api.TransitionImage(img.runtime.handle, img.handle, layout)
 }
 
-// CopyTo 复制到另一个图像（设备端）
+// CopyTo copies to another image (device-side)
 func (img *Image) CopyTo(dst *Image) error {
 	if img.width != dst.width || img.height != dst.height {
-		return fmt.Errorf("图像尺寸不匹配: %dx%d vs %dx%d",
+		return fmt.Errorf("image size mismatch: %dx%d vs %dx%d",
 			img.width, img.height, dst.width, dst.height)
 	}
 	if img.format != dst.format {
-		return fmt.Errorf("图像格式不匹配")
+		return fmt.Errorf("image format mismatch")
 	}
 
-	// 构造图像切片
+	// Construct image slices
 	srcSlice := &c_api.TiImageSlice{
 		Image:    img.handle,
 		MipLevel: 0,
@@ -122,7 +122,7 @@ func (img *Image) CopyTo(dst *Image) error {
 	return nil
 }
 
-// CopyFrom 从另一个图像复制（设备端）
+// CopyFrom copies from another image (device-side)
 func (img *Image) CopyFrom(src *Image) error {
 	return src.CopyTo(img)
 }
