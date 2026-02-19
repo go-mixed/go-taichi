@@ -24,25 +24,22 @@ go get github.com/go-mixed/go-taichi
 
 ### Runtime Library
 
-Download the Taichi C-API dynamic library from [Releases](https://github.com/go-mixed/go-taichi/releases) and place it in your project's `taichi/c_api/lib/` directory:
+Download the Taichi C-API dynamic library from [Releases](https://github.com/go-mixed/go-taichi/releases):
 
 **Required file**:
 - Windows: `taichi_c_api.dll`
 - Linux: `libtaichi_c_api.so`
 - macOS: `libtaichi_c_api.dylib`
 
-**Directory structure**:
-```
-your-project/
-└── taichi/
-    └── c_api/
-        └── lib/
-            └── taichi_c_api.dll  # or .so / .dylib
-```
+**Library placement**:
 
-**Note**: The library is loaded at runtime from this location.
+1. **Current Working Directory** - Place in project root (recommended for development)
+2. **System PATH Directory** - Windows: `System32` or `%PATH%`; Linux/macOS: `/usr/local/lib` or `$LD_LIBRARY_PATH`/`$DYLD_LIBRARY_PATH` (recommended for production)
+3. **Custom Directory** - Any directory, specify path via `NewRuntimeAuto("./lib")`
 
-### C Header Files
+**Note**: `NewRuntimeAuto("")` searches current working directory first, then system PATH; `NewRuntimeAuto("./lib")` searches specified directory first, then system PATH.
+
+### NO-NEED C Header Files
 
 The C header files in `taichi/c_api/include/` are reference files used for generating Go API bindings. They are not required at runtime.
 
@@ -60,28 +57,33 @@ import (
 
 func main() {
 	
-    // 2. Create runtime (auto-select best backend)
+    // 1. Create runtime (auto-select best backend)
+    // Option 1: Load from current directory or system PATH
     runtime, err := taichi.NewRuntimeAuto("")
+
+    // Option 2: Load from custom directory (e.g., "./lib", "/opt/taichi")
+    // runtime, err := taichi.NewRuntimeAuto("./lib")
+
     if err != nil {
         panic(err)
     }
     defer runtime.Release()
     fmt.Printf("Backend: %s\n", runtime.ArchName())
 
-    // 3. Load precompiled AOT module
+    // 2. Load precompiled AOT module
     module, err := taichi.LoadAotModule(runtime, "./module.tcm")
     if err != nil {
         panic(err)
     }
     defer module.Release()
 
-    // 4. Get kernel from module
+    // 3. Get kernel from module
     kernel, err := module.GetKernel("add_kernel")
     if err != nil {
         panic(err)
     }
 
-    // 5. Create input/output arrays
+    // 4. Create input/output arrays
     size := uint32(1000)
     a, _ := taichi.NewNdArray1D(runtime, size, taichi.DataTypeF32)
     b, _ := taichi.NewNdArray1D(runtime, size, taichi.DataTypeF32)
@@ -90,7 +92,7 @@ func main() {
     defer b.Release()
     defer c.Release()
 
-    // 6. Fill input data
+    // 5. Fill input data
     dataA, _ := a.AsSliceFloat32()
     dataB, _ := b.AsSliceFloat32()
     for i := range dataA {
@@ -100,14 +102,14 @@ func main() {
     a.Unmap()
     b.Unmap()
 
-    // 7. Execute kernel: c = a + b
+    // 6. Execute kernel: c = a + b
     kernel.Launch().
         ArgNdArray(a).
         ArgNdArray(b).
         ArgNdArray(c).
         Run()
 
-    // 8. Read results
+    // 7. Read results
     dataC, _ := c.AsSliceFloat32()
     fmt.Printf("Results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
         dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
