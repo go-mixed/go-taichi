@@ -88,77 +88,66 @@ func (arr *NdArray) ElemSize() int {
 	return arr.elemSize
 }
 
-// AsSliceFloat32 maps the array as a float32 slice (float32 type only)
-func (arr *NdArray) AsSliceFloat32() ([]float32, error) {
+// WithFloat32 executes fn with the array data as a float32 slice (float32 type only)
+// The slice is only valid during the callback execution.
+func (arr *NdArray) WithFloat32(fn func([]float32) error) error {
 	if arr.elemType != DataTypeF32 {
-		return nil, fmt.Errorf("array type is not float32")
+		return fmt.Errorf("array type is not float32")
 	}
 
-	ptr, err := arr.Map()
-	if err != nil {
-		return nil, err
-	}
-
-	length := arr.TotalElements()
-	return unsafe.Slice((*float32)(ptr), length), nil
+	return arr.Invoke(func(ptr unsafe.Pointer) error {
+		length := arr.TotalElements()
+		data := unsafe.Slice((*float32)(ptr), length)
+		return fn(data)
+	})
 }
 
-// AsSliceInt32 maps the array as an int32 slice (int32 type only)
-func (arr *NdArray) AsSliceInt32() ([]int32, error) {
+// WithInt32 executes fn with the array data as an int32 slice (int32 type only)
+// The slice is only valid during the callback execution.
+func (arr *NdArray) WithInt32(fn func([]int32) error) error {
 	if arr.elemType != DataTypeI32 {
-		return nil, fmt.Errorf("array type is not int32")
+		return fmt.Errorf("array type is not int32")
 	}
 
-	ptr, err := arr.Map()
-	if err != nil {
-		return nil, err
-	}
-
-	length := arr.TotalElements()
-	return unsafe.Slice((*int32)(ptr), length), nil
+	return arr.Invoke(func(ptr unsafe.Pointer) error {
+		length := arr.TotalElements()
+		data := unsafe.Slice((*int32)(ptr), length)
+		return fn(data)
+	})
 }
 
-// AsSliceUint8 maps the array as a uint8 slice (uint8 type only)
-func (arr *NdArray) AsSliceUint8() ([]uint8, error) {
+// WithUint8 executes fn with the array data as a uint8 slice (uint8 type only)
+// The slice is only valid during the callback execution.
+func (arr *NdArray) WithUint8(fn func([]uint8) error) error {
 	if arr.elemType != DataTypeU8 {
-		return nil, fmt.Errorf("array type is not uint8")
+		return fmt.Errorf("array type is not uint8")
 	}
 
-	ptr, err := arr.Map()
-	if err != nil {
-		return nil, err
-	}
-
-	length := arr.TotalElements()
-	return unsafe.Slice((*uint8)(ptr), length), nil
+	return arr.Invoke(func(ptr unsafe.Pointer) error {
+		length := arr.TotalElements()
+		data := unsafe.Slice((*uint8)(ptr), length)
+		return fn(data)
+	})
 }
 
 // Fill fills the array (float32)
 func (arr *NdArray) Fill(value float32) error {
-	data, err := arr.AsSliceFloat32()
-	if err != nil {
-		return err
-	}
-
-	for i := range data {
-		data[i] = value
-	}
-
-	return nil
+	return arr.WithFloat32(func(data []float32) error {
+		for i := range data {
+			data[i] = value
+		}
+		return nil
+	})
 }
 
 // FillInt32 fills the array (int32)
 func (arr *NdArray) FillInt32(value int32) error {
-	data, err := arr.AsSliceInt32()
-	if err != nil {
-		return err
-	}
-
-	for i := range data {
-		data[i] = value
-	}
-
-	return nil
+	return arr.WithInt32(func(data []int32) error {
+		for i := range data {
+			data[i] = value
+		}
+		return nil
+	})
 }
 
 // getElemSize gets the element size

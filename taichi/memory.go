@@ -2,8 +2,9 @@ package taichi
 
 import (
 	"fmt"
-	"github.com/go-mixed/go-taichi/taichi/c_api"
 	"unsafe"
+
+	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
 // Memory base class for memory
@@ -11,8 +12,6 @@ type Memory struct {
 	runtime *Runtime
 	handle  c_api.TiMemory
 	size    uint64
-	mapped  bool
-	ptr     unsafe.Pointer
 }
 
 // NewMemory creates a new memory object
@@ -30,61 +29,38 @@ func NewMemory(tiRuntime *Runtime, size uint64) (*Memory, error) {
 		return nil, fmt.Errorf("memory allocation failed [%d]: %s", errCode, errMsg)
 	}
 
-	m := &Memory{
+	return &Memory{
 		runtime: tiRuntime,
 		handle:  handle,
 		size:    size,
-		mapped:  false,
-		ptr:     nil,
-	}
-
-	return m, nil
+	}, nil
 }
 
 // Release releases memory
 func (m *Memory) Release() {
-	if m.mapped {
-		m.Unmap()
-	}
 	if m.handle != c_api.TI_NULL_HANDLE {
 		c_api.FreeMemory(m.runtime.handle, m.handle)
 		m.handle = c_api.TI_NULL_HANDLE
 	}
 }
 
-// Map maps memory to host
-func (m *Memory) Map() (unsafe.Pointer, error) {
-	if m.mapped {
-		return m.ptr, nil
-	}
-
+// mapMemory maps memory to host (internal use only)
+func (m *Memory) mapMemory() (unsafe.Pointer, error) {
 	ptr := c_api.MapMemory(m.runtime.handle, m.handle)
 	if ptr == nil {
 		return nil, fmt.Errorf("memory mapping failed")
 	}
-
-	m.ptr = ptr
-	m.mapped = true
 	return ptr, nil
 }
 
-// Unmap unmaps memory
-func (m *Memory) Unmap() {
-	if m.mapped {
-		c_api.UnmapMemory(m.runtime.handle, m.handle)
-		m.mapped = false
-		m.ptr = nil
-	}
+// unmapMemory unmaps memory (internal use only)
+func (m *Memory) unmapMemory() {
+	c_api.UnmapMemory(m.runtime.handle, m.handle)
 }
 
 // Size gets memory size
 func (m *Memory) Size() uint64 {
 	return m.size
-}
-
-// IsMapped checks if memory is mapped
-func (m *Memory) IsMapped() bool {
-	return m.mapped
 }
 
 // Handle gets the underlying handle (for internal use or testing)
@@ -108,4 +84,33 @@ func (m *Memory) CopyTo(dst *Memory) error {
 // CopyFrom copies from another memory (device-side)
 func (m *Memory) CopyFrom(src *Memory) error {
 	return src.CopyTo(m)
+}
+
+// Invoke maps memory, executes the write function, and unmaps.
+// This ensures thread safety by using syncCall which serializes all C-API calls.
+func (m *Memory) Invoke(fn func(ptr unsafe.Pointer) error) error {
+	ptr := c_api.MapMemory(m.runtime.handle, m.handle)
+	if ptr == nil {
+		return fmt.Errorf("memory mapping failed")
+	}
+	defer c_api.UnmapMemory(m.runtime.handle, m.handle)
+
+	return c_api.SyncCall(func() error {
+		// Execute user's write function
+		return fn(ptr)
+	})
+}
+
+// Read reads data from memory into the provided slice
+func (m *Memory) Read(data []byte) error {
+	ptr := c_api.MapMemory(m.runtime.handle, m.handle)
+	if ptr == nil {
+		return fmt.Errorf("memory mapping failed")
+	}
+	defer c_api.UnmapMemory(m.runtime.handle, m.handle)
+
+	c_api.SyncCallVoid(func() {
+		copy(data, unsafe.Slice((*byte)(ptr), m.size))
+	})
+	return nil
 }

@@ -1,22 +1,28 @@
 package taichi
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
-	"github.com/go-mixed/go-taichi/taichi/c_api"
+	"io"
 	"os"
+	"path/filepath"
 	"unsafe"
+
+	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
 // AotModule AOT module abstraction
 type AotModule struct {
 	runtime *Runtime
 	handle  c_api.TiAotModule
+	tempDir string // temporary directory for extracted TCM (non-Vulkan backends)
 }
 
-// LoadAotModule loads an AOT module from the filesystem
+// LoadAotModuleFile loads an AOT module from the filesystem
 // modulePath should point to a directory containing metadata.json
-func LoadAotModule(runtime *Runtime, modulePath string) (*AotModule, error) {
-	handle := c_api.LoadAotModule(runtime.handle, modulePath)
+func LoadAotModuleFile(runtime *Runtime, moduleDir string) (*AotModule, error) {
+	handle := c_api.LoadAotModule(runtime.handle, moduleDir)
 	if handle == c_api.TI_NULL_HANDLE {
 		errCode, errMsg := c_api.GetLastError()
 		return nil, fmt.Errorf("failed to load AOT module [%d]: %s", errCode, errMsg)
@@ -28,25 +34,105 @@ func LoadAotModule(runtime *Runtime, modulePath string) (*AotModule, error) {
 	}, nil
 }
 
-// LoadAotModuleFromTCM loads an AOT module from a .tcm file
-func LoadAotModuleFromTCM(runtime *Runtime, tcmPath string) (*AotModule, error) {
-	// Read TCM file
-	tcmData, err := os.ReadFile(tcmPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read TCM file: %w", err)
+// LoadAotModule loads an AOT module data from a .tcm file
+//
+// For Vulkan backend: passes TCM data directly to C-API
+// For other backends (CPU/CUDA): extracts TCM zip to temp directory and loads from it
+func LoadAotModule(runtime *Runtime, tcmData []byte) (*AotModule, error) {
+	if len(tcmData) == 0 {
+		return nil, fmt.Errorf("empty TCM file")
 	}
 
-	// Create AOT module
-	handle := c_api.CreateAotModule(runtime.handle, unsafe.Pointer(&tcmData[0]), uint64(len(tcmData)))
+	// Vulkan backend supports direct TCM data loading
+	if runtime.arch == ArchVulkan {
+		handle := c_api.CreateAotModule(runtime.handle, unsafe.Pointer(&tcmData[0]), uint64(len(tcmData)))
+		if handle == c_api.TI_NULL_HANDLE {
+			errCode, errMsg := c_api.GetLastError()
+			return nil, fmt.Errorf("failed to create module from TCM [%d]: %s", errCode, errMsg)
+		}
+		return &AotModule{
+			runtime: runtime,
+			handle:  handle,
+		}, nil
+	}
+
+	// Other backends (CPU/CUDA) require extracted TCM files
+	// Extract TCM zip to temp directory
+	tempDir, err := extractTCMToDir(tcmData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract TCM: %w", err)
+	}
+
+	// Load from extracted directory
+	handle := c_api.LoadAotModule(runtime.handle, tempDir)
 	if handle == c_api.TI_NULL_HANDLE {
+		os.RemoveAll(tempDir)
 		errCode, errMsg := c_api.GetLastError()
-		return nil, fmt.Errorf("failed to create module from TCM [%d]: %s", errCode, errMsg)
+		return nil, fmt.Errorf("failed to load AOT module [%d]: %s", errCode, errMsg)
 	}
 
 	return &AotModule{
 		runtime: runtime,
 		handle:  handle,
+		tempDir: tempDir,
 	}, nil
+}
+
+// extractTCMToDir extracts TCM zip data to a temporary directory
+func extractTCMToDir(tcmData []byte) (string, error) {
+	tempDir, err := os.MkdirTemp("", "taichi_tcm_*")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	reader, err := zip.NewReader(bytes.NewReader(tcmData), int64(len(tcmData)))
+	if err != nil {
+		os.RemoveAll(tempDir)
+		return "", fmt.Errorf("failed to read TCM zip: %w", err)
+	}
+
+	for _, file := range reader.File {
+		path := filepath.Join(tempDir, file.Name)
+
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(path, 0755); err != nil {
+				os.RemoveAll(tempDir)
+				return "", fmt.Errorf("failed to create directory: %w", err)
+			}
+			continue
+		}
+
+		// Ensure parent directory exists
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			os.RemoveAll(tempDir)
+			return "", fmt.Errorf("failed to create parent directory: %w", err)
+		}
+
+		src, err := file.Open()
+		if err != nil {
+			os.RemoveAll(tempDir)
+			return "", fmt.Errorf("failed to open zip entry: %w", err)
+		}
+
+		dst, err := os.Create(path)
+		if err != nil {
+			src.Close()
+			os.RemoveAll(tempDir)
+			return "", fmt.Errorf("failed to create file: %w", err)
+		}
+
+		if _, err := io.Copy(dst, src); err != nil {
+			src.Close()
+			dst.Close()
+			os.RemoveAll(tempDir)
+			return "", fmt.Errorf("failed to extract file: %w", err)
+		}
+
+		src.Close()
+		dst.Close()
+	}
+
+	return tempDir, nil
 }
 
 // Release releases the AOT module
@@ -54,6 +140,11 @@ func (m *AotModule) Release() {
 	if m.handle != c_api.TI_NULL_HANDLE {
 		c_api.DestroyAotModule(m.handle)
 		m.handle = c_api.TI_NULL_HANDLE
+	}
+	// Clean up temp directory if created for non-Vulkan backends
+	if m.tempDir != "" {
+		os.RemoveAll(m.tempDir)
+		m.tempDir = ""
 	}
 }
 

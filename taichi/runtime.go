@@ -2,6 +2,7 @@ package taichi
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
@@ -32,6 +33,17 @@ func NewRuntime(arch Arch, libDir string) (*Runtime, error) {
 			return nil, fmt.Errorf("no available compute architectures")
 		}
 		arch = selectBestArch(archs)
+	}
+
+	// Check TI_LIB_DIR for non-Vulkan backends
+	if arch != ArchVulkan {
+		tiLibDir := os.Getenv("TI_LIB_DIR")
+		if tiLibDir == "" {
+			return nil, fmt.Errorf("TI_LIB_DIR environment variable is required for %s backend, but it is not set", getArchName(arch))
+		}
+		if _, err := os.Stat(tiLibDir); err != nil {
+			return nil, fmt.Errorf("TI_LIB_DIR is set to \"%s\", but the directory does not exist: %w", tiLibDir, err)
+		}
 	}
 
 	// Create runtime

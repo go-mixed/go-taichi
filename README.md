@@ -143,6 +143,48 @@ This example demonstrates:
 
 **Recommendation**: Use Vulkan (best cross-platform) or CUDA (NVIDIA GPU).
 
+## Important Notes
+
+### Runtime Files
+
+Taichi C-API internal backends require runtime files (`.bc` files) which **cannot be loaded from Go code** due to subprocess initialization.
+
+1. **Copy runtime files** from Python Taichi installation:
+
+   Find the runtime directory:
+   ```bash
+   python -c "import os; import taichi as ti; p = os.path.join(ti.__path__[0], '_lib', 'runtime'); print(p)"
+   # Example output: C:/Python311/Lib/site-packages/taichi/_lib/runtime
+   ```
+
+   Copy the entire `runtime` folder to your project:
+   ```
+   your_project/
+   ├── lib/
+   │   ├── taichi_c_api.dll    # or .so/.dylib
+   │   └── runtime/            # copied from Python Taichi
+   │       ├── runtime_x64.bc      # CPU backend
+   │       ├── runtime_cuda.bc     # CUDA backend
+   │       ├── runtime_dx12.bc     # DX12 backend
+   │       └── slim_libdevice.10.bc # CUDA math library
+   ```
+
+2. **Set environment variable externally** (required for non-Vulkan backends):
+
+```powershell
+# Windows PowerShell (run before your Go program)
+$env:TI_LIB_DIR = "C:\path\to\your\project\lib\runtime"
+go run your_program.go
+```
+
+```bash
+# Linux/macOS
+export TI_LIB_DIR=/path/to/your/project/lib/runtime
+go run your_program.go
+```
+
+**Recommendation**: Use Vulkan backend which does not require `TI_LIB_DIR`.
+
 ## Examples
 
 See [examples/](examples/) directory:

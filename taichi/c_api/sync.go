@@ -35,6 +35,11 @@ func SyncCall[T any](task func() T) T {
 		return task()
 	}
 	r := <-resultCh
+
+	if r == nil {
+		var t T
+		return t
+	}
 	return r.(T)
 }
 

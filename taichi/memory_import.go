@@ -2,8 +2,9 @@ package taichi
 
 import (
 	"fmt"
-	"github.com/go-mixed/go-taichi/taichi/c_api"
 	"unsafe"
+
+	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
 // ImportCPUMemory wraps existing CPU memory as a Memory object
@@ -42,7 +43,6 @@ func ImportCPUMemory(runtime *Runtime, ptr unsafe.Pointer, size uint64) (*Memory
 		runtime: runtime,
 		handle:  handle,
 		size:    size,
-		mapped:  false,
 	}, nil
 }
 
@@ -79,7 +79,6 @@ func ImportCUDAMemory(runtime *Runtime, ptr unsafe.Pointer, size uint64) (*Memor
 		runtime: runtime,
 		handle:  handle,
 		size:    size,
-		mapped:  false,
 	}, nil
 }
 
