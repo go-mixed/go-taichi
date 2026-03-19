@@ -87,7 +87,9 @@ func ImportCPUMemory(runtime TiRuntime, ptr unsafe.Pointer, size uint64) TiMemor
 		SetLastError(TI_ERROR_NOT_SUPPORTED, "CPU memory import not supported by current backend")
 		return TI_NULL_HANDLE
 	}
-	return tiImportCpuMemory(runtime, ptr, size)
+	return SyncCall(func() TiMemory {
+		return tiImportCpuMemory(runtime, ptr, size)
+	})
 }
 
 // ImportCUDAMemory wraps an existing CUDA memory pointer as TiMemory
@@ -116,7 +118,9 @@ func ImportCUDAMemory(runtime TiRuntime, ptr unsafe.Pointer, size uint64) TiMemo
 		SetLastError(TI_ERROR_NOT_SUPPORTED, "CUDA memory import not supported by current backend")
 		return TI_NULL_HANDLE
 	}
-	return tiImportCudaMemory(runtime, ptr, size)
+	return SyncCall(func() TiMemory {
+		return tiImportCudaMemory(runtime, ptr, size)
+	})
 }
 
 // GetCUDAStream gets the current CUDA stream
@@ -140,7 +144,9 @@ func GetCUDAStream(stream *unsafe.Pointer) {
 		*stream = nil
 		return
 	}
-	tiGetCudaStream(stream)
+	SyncCallVoid(func() {
+		tiGetCudaStream(stream)
+	})
 }
 
 // SetCUDAStream sets the CUDA stream used by Taichi
@@ -161,5 +167,7 @@ func SetCUDAStream(stream unsafe.Pointer) {
 		SetLastError(TI_ERROR_NOT_SUPPORTED, "CUDA stream management not supported by current backend")
 		return
 	}
-	tiSetCudaStream(stream)
+	SyncCallVoid(func() {
+		tiSetCudaStream(stream)
+	})
 }

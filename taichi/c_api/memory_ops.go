@@ -52,7 +52,9 @@ func registerMemoryFunctions() error {
 //	memory := taichi.AllocateMemory(runtime, &allocInfo)
 //	defer taichi.FreeMemory(runtime, memory)
 func AllocateMemory(runtime TiRuntime, allocateInfo *TiMemoryAllocateInfo) TiMemory {
-	return tiAllocateMemory(runtime, allocateInfo)
+	return SyncCall(func() TiMemory {
+		return tiAllocateMemory(runtime, allocateInfo)
+	})
 }
 
 // FreeMemory frees a memory allocation
@@ -65,7 +67,9 @@ func AllocateMemory(runtime TiRuntime, allocateInfo *TiMemoryAllocateInfo) TiMem
 //
 //	taichi.FreeMemory(runtime, memory)
 func FreeMemory(runtime TiRuntime, memory TiMemory) {
-	tiFreeMemory(runtime, memory)
+	SyncCallVoid(func() {
+		tiFreeMemory(runtime, memory)
+	})
 }
 
 // MapMemory maps device memory to host-addressable space
@@ -90,7 +94,9 @@ func FreeMemory(runtime TiRuntime, memory TiMemory) {
 //	    taichi.UnmapMemory(runtime, memory)
 //	}
 func MapMemory(runtime TiRuntime, memory TiMemory) unsafe.Pointer {
-	return tiMapMemory(runtime, memory)
+	return SyncCall(func() unsafe.Pointer {
+		return tiMapMemory(runtime, memory)
+	})
 }
 
 // UnmapMemory unmaps device memory and makes any host-side changes visible to the device
@@ -107,7 +113,9 @@ func MapMemory(runtime TiRuntime, memory TiMemory) unsafe.Pointer {
 //	// ... operate on ptr ...
 //	taichi.UnmapMemory(runtime, memory)
 func UnmapMemory(runtime TiRuntime, memory TiMemory) {
-	tiUnmapMemory(runtime, memory)
+	SyncCallVoid(func() {
+		tiUnmapMemory(runtime, memory)
+	})
 }
 
 // CopyMemoryDeviceToDevice copies a contiguous subsection of memory within the device
@@ -133,5 +141,7 @@ func UnmapMemory(runtime TiRuntime, memory TiMemory) {
 //	}
 //	taichi.CopyMemoryDeviceToDevice(runtime, dstSlice, srcSlice)
 func CopyMemoryDeviceToDevice(runtime TiRuntime, dst *TiMemorySlice, src *TiMemorySlice) {
-	tiCopyMemoryDeviceToDevice(runtime, dst, src)
+	SyncCallVoid(func() {
+		tiCopyMemoryDeviceToDevice(runtime, dst, src)
+	})
 }

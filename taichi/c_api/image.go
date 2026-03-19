@@ -54,7 +54,9 @@ func registerImageFunctions() error {
 //	image := taichi.AllocateImage(runtime, &allocInfo)
 //	defer taichi.FreeImage(runtime, image)
 func AllocateImage(runtime TiRuntime, allocateInfo *TiImageAllocateInfo) TiImage {
-	return tiAllocateImage(runtime, allocateInfo)
+	return SyncCall(func() TiImage {
+		return tiAllocateImage(runtime, allocateInfo)
+	})
 }
 
 // FreeImage frees an image allocation
@@ -67,7 +69,9 @@ func AllocateImage(runtime TiRuntime, allocateInfo *TiImageAllocateInfo) TiImage
 //
 //	taichi.FreeImage(runtime, image)
 func FreeImage(runtime TiRuntime, image TiImage) {
-	tiFreeImage(runtime, image)
+	SyncCallVoid(func() {
+		tiFreeImage(runtime, image)
+	})
 }
 
 // CreateSampler creates an image sampler
@@ -90,7 +94,9 @@ func FreeImage(runtime TiRuntime, image TiImage) {
 //	sampler := taichi.CreateSampler(runtime, &createInfo)
 //	defer taichi.DestroySampler(runtime, sampler)
 func CreateSampler(runtime TiRuntime, createInfo *TiSamplerCreateInfo) TiSampler {
-	return tiCreateSampler(runtime, createInfo)
+	return SyncCall(func() TiSampler {
+		return tiCreateSampler(runtime, createInfo)
+	})
 }
 
 // DestroySampler destroys a sampler
@@ -103,7 +109,9 @@ func CreateSampler(runtime TiRuntime, createInfo *TiSamplerCreateInfo) TiSampler
 //
 //	taichi.DestroySampler(runtime, sampler)
 func DestroySampler(runtime TiRuntime, sampler TiSampler) {
-	tiDestroySampler(runtime, sampler)
+	SyncCallVoid(func() {
+		tiDestroySampler(runtime, sampler)
+	})
 }
 
 // CopyImageDeviceToDevice copies a contiguous subsection of an image within the device
@@ -131,7 +139,9 @@ func DestroySampler(runtime TiRuntime, sampler TiSampler) {
 //	}
 //	taichi.CopyImageDeviceToDevice(runtime, dstSlice, srcSlice)
 func CopyImageDeviceToDevice(runtime TiRuntime, dst *TiImageSlice, src *TiImageSlice) {
-	tiCopyImageDeviceToDevice(runtime, dst, src)
+	SyncCallVoid(func() {
+		tiCopyImageDeviceToDevice(runtime, dst, src)
+	})
 }
 
 // TrackImageExt tracks a device image with the provided image layout
@@ -148,7 +158,9 @@ func CopyImageDeviceToDevice(runtime TiRuntime, dst *TiImageSlice, src *TiImageS
 //
 //	taichi.TrackImageExt(runtime, image, taichi.TI_IMAGE_LAYOUT_SHADER_READ)
 func TrackImageExt(runtime TiRuntime, image TiImage, layout TiImageLayout) {
-	tiTrackImageExt(runtime, image, layout)
+	SyncCallVoid(func() {
+		tiTrackImageExt(runtime, image, layout)
+	})
 }
 
 // TransitionImage transitions an image to the provided image layout
@@ -165,5 +177,7 @@ func TrackImageExt(runtime TiRuntime, image TiImage, layout TiImageLayout) {
 //
 //	taichi.TransitionImage(runtime, image, taichi.TI_IMAGE_LAYOUT_SHADER_READ)
 func TransitionImage(runtime TiRuntime, image TiImage, layout TiImageLayout) {
-	tiTransitionImage(runtime, image, layout)
+	SyncCallVoid(func() {
+		tiTransitionImage(runtime, image, layout)
+	})
 }

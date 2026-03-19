@@ -54,7 +54,9 @@ func registerAotFunctions() error {
 //	defer taichi.DestroyAotModule(module)
 func LoadAotModule(runtime TiRuntime, modulePath string) TiAotModule {
 	cPath := append([]byte(modulePath), 0)
-	return tiLoadAotModule(runtime, &cPath[0])
+	return SyncCall[TiAotModule](func() TiAotModule {
+		return tiLoadAotModule(runtime, &cPath[0])
+	})
 }
 
 // CreateAotModule creates a precompiled AOT module from TCM data
@@ -73,7 +75,9 @@ func LoadAotModule(runtime TiRuntime, modulePath string) TiAotModule {
 //	module := taichi.CreateAotModule(runtime, unsafe.Pointer(&tcmData[0]), uint64(len(tcmData)))
 //	defer taichi.DestroyAotModule(module)
 func CreateAotModule(runtime TiRuntime, tcm unsafe.Pointer, size uint64) TiAotModule {
-	return tiCreateAotModule(runtime, tcm, size)
+	return SyncCall[TiAotModule](func() TiAotModule {
+		return tiCreateAotModule(runtime, tcm, size)
+	})
 }
 
 // DestroyAotModule destroys a loaded AOT module and frees all associated resources
@@ -87,7 +91,10 @@ func CreateAotModule(runtime TiRuntime, tcm unsafe.Pointer, size uint64) TiAotMo
 //
 //	taichi.DestroyAotModule(module)
 func DestroyAotModule(aotModule TiAotModule) {
-	tiDestroyAotModule(aotModule)
+	SyncCall(func() uintptr {
+		tiDestroyAotModule(aotModule)
+		return 0
+	})
 }
 
 // GetAotModuleKernel retrieves a precompiled Taichi kernel from an AOT module
@@ -107,7 +114,9 @@ func DestroyAotModule(aotModule TiAotModule) {
 //	}
 func GetAotModuleKernel(aotModule TiAotModule, name string) TiKernel {
 	cName := append([]byte(name), 0)
-	return tiGetAotModuleKernel(aotModule, &cName[0])
+	return SyncCall[TiKernel](func() TiKernel {
+		return tiGetAotModuleKernel(aotModule, &cName[0])
+	})
 }
 
 // GetAotModuleComputeGraph retrieves a precompiled compute graph from an AOT module
@@ -127,7 +136,9 @@ func GetAotModuleKernel(aotModule TiAotModule, name string) TiKernel {
 //	}
 func GetAotModuleComputeGraph(aotModule TiAotModule, name string) TiComputeGraph {
 	cName := append([]byte(name), 0)
-	return tiGetAotModuleComputeGraph(aotModule, &cName[0])
+	return SyncCall[TiComputeGraph](func() TiComputeGraph {
+		return tiGetAotModuleComputeGraph(aotModule, &cName[0])
+	})
 }
 
 // LaunchKernel launches a Taichi kernel with the provided arguments
@@ -150,11 +161,14 @@ func GetAotModuleComputeGraph(aotModule TiAotModule, name string) TiComputeGraph
 //	taichi.Flush(runtime)
 //	taichi.Wait(runtime)
 func LaunchKernel(runtime TiRuntime, kernel TiKernel, args []TiArgument) {
-	if len(args) == 0 {
-		tiLaunchKernel(runtime, kernel, 0, nil)
-		return
-	}
-	tiLaunchKernel(runtime, kernel, uint32(len(args)), &args[0])
+	SyncCallVoid(func() {
+		if len(args) == 0 {
+			tiLaunchKernel(runtime, kernel, 0, nil)
+			return
+		}
+		tiLaunchKernel(runtime, kernel, uint32(len(args)), &args[0])
+	})
+
 }
 
 // LaunchComputeGraph launches a Taichi compute graph with the provided named arguments
@@ -176,11 +190,14 @@ func LaunchKernel(runtime TiRuntime, kernel TiKernel, args []TiArgument) {
 //	taichi.Flush(runtime)
 //	taichi.Wait(runtime)
 func LaunchComputeGraph(runtime TiRuntime, computeGraph TiComputeGraph, args []TiNamedArgument) {
-	if len(args) == 0 {
-		tiLaunchComputeGraph(runtime, computeGraph, 0, nil)
-		return
-	}
-	tiLaunchComputeGraph(runtime, computeGraph, uint32(len(args)), &args[0])
+	SyncCallVoid(func() {
+		if len(args) == 0 {
+			tiLaunchComputeGraph(runtime, computeGraph, 0, nil)
+			return
+		}
+		tiLaunchComputeGraph(runtime, computeGraph, uint32(len(args)), &args[0])
+	})
+
 }
 
 // Flush submits all previously called device commands to the target device for execution
@@ -193,7 +210,9 @@ func LaunchComputeGraph(runtime TiRuntime, computeGraph TiComputeGraph, args []T
 //	taichi.LaunchKernel(runtime, kernel, args)
 //	taichi.Flush(runtime)
 func Flush(runtime TiRuntime) {
-	tiFlush(runtime)
+	SyncCallVoid(func() {
+		tiFlush(runtime)
+	})
 }
 
 // Wait waits for all previously called device commands to complete execution
@@ -209,5 +228,7 @@ func Flush(runtime TiRuntime) {
 //	taichi.Flush(runtime)
 //	taichi.Wait(runtime)
 func Wait(runtime TiRuntime) {
-	tiWait(runtime)
+	SyncCallVoid(func() {
+		tiWait(runtime)
+	})
 }

@@ -35,7 +35,9 @@ func registerCoreFunctions() error {
 //	version := taichi.GetVersion()
 //	fmt.Printf("Taichi version: %d\n", version)
 func GetVersion() uint32 {
-	return tiGetVersion()
+	return SyncCall(func() uint32 {
+		return tiGetVersion()
+	})
 }
 
 // GetAvailableArchs gets the list of available architectures on the current platform
@@ -55,16 +57,18 @@ func GetVersion() uint32 {
 //	    fmt.Printf("Available architecture: %d\n", arch)
 //	}
 func GetAvailableArchs() []TiArch {
-	var count uint32
-	tiGetAvailableArchs(&count, nil)
+	return SyncCall(func() []TiArch {
+		var count uint32
+		tiGetAvailableArchs(&count, nil)
 
-	if count == 0 {
-		return nil
-	}
+		if count == 0 {
+			return nil
+		}
 
-	archs := make([]TiArch, count)
-	tiGetAvailableArchs(&count, &archs[0])
-	return archs
+		archs := make([]TiArch, count)
+		tiGetAvailableArchs(&count, &archs[0])
+		return archs
+	})
 }
 
 // GetLastError gets the last error raised by a Taichi C-API call
@@ -78,16 +82,24 @@ func GetAvailableArchs() []TiArch {
 //	    fmt.Printf("Error: %d - %s\n", errCode, errMsg)
 //	}
 func GetLastError() (TiError, string) {
-	var size uint64
-	err := tiGetLastError(&size, nil)
+	var result TiError
+	var resultMsg string
+	SyncCallVoid(func() {
+		var size uint64
+		err := tiGetLastError(&size, nil)
 
-	if size == 0 {
-		return err, ""
-	}
+		if size == 0 {
+			result = err
+			resultMsg = ""
+			return
+		}
 
-	msg := make([]byte, size)
-	err = tiGetLastError(&size, &msg[0])
-	return err, string(msg[:size-1]) // Remove null terminator
+		msg := make([]byte, size)
+		err = tiGetLastError(&size, &msg[0])
+		result = err
+		resultMsg = string(msg[:size-1]) // Remove null terminator
+	})
+	return result, resultMsg
 }
 
 // SetLastError sets the provided error as the last error raised by a Taichi C-API call
@@ -98,12 +110,14 @@ func GetLastError() (TiError, string) {
 //   - error: Semantic error code
 //   - message: Null-terminated string for text error message, or empty string for no error message
 func SetLastError(error TiError, message string) {
-	if message == "" {
-		tiSetLastError(error, nil)
-		return
-	}
-	msg := append([]byte(message), 0)
-	tiSetLastError(error, &msg[0])
+	SyncCallVoid(func() {
+		if message == "" {
+			tiSetLastError(error, nil)
+			return
+		}
+		msg := append([]byte(message), 0)
+		tiSetLastError(error, &msg[0])
+	})
 }
 
 // CreateRuntime creates a Taichi runtime with the specified architecture
@@ -124,7 +138,10 @@ func SetLastError(error TiError, message string) {
 //	}
 //	defer taichi.DestroyRuntime(runtime)
 func CreateRuntime(arch TiArch, deviceIndex uint32) TiRuntime {
-	return tiCreateRuntime(arch, deviceIndex)
+	runMainThread()
+	return SyncCall(func() TiRuntime {
+		return tiCreateRuntime(arch, deviceIndex)
+	})
 }
 
 // DestroyRuntime destroys a Taichi runtime
@@ -139,5 +156,9 @@ func CreateRuntime(arch TiArch, deviceIndex uint32) TiRuntime {
 //	runtime := taichi.CreateRuntime(taichi.TI_ARCH_VULKAN, 0)
 //	defer taichi.DestroyRuntime(runtime)
 func DestroyRuntime(runtime TiRuntime) {
-	tiDestroyRuntime(runtime)
+	SyncCallVoid(func() {
+		tiDestroyRuntime(runtime)
+	})
+
+	closeMainThread()
 }
