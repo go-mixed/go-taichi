@@ -1,6 +1,8 @@
 package c_api
 
-import "github.com/ebitengine/purego"
+import (
+	"github.com/ebitengine/purego"
+)
 
 // ===== Core Function Pointers =====
 
@@ -138,7 +140,13 @@ func SetLastError(error TiError, message string) {
 //	}
 //	defer taichi.DestroyRuntime(runtime)
 func CreateRuntime(arch TiArch, deviceIndex uint32) TiRuntime {
-	runMainThread()
+	if !runtimeRunning.CompareAndSwap(false, true) {
+		panic("taichi runtime already running")
+	}
+
+	if arch == TI_ARCH_CUDA {
+		runMainThread()
+	}
 	return SyncCall(func() TiRuntime {
 		return tiCreateRuntime(arch, deviceIndex)
 	})
@@ -161,4 +169,6 @@ func DestroyRuntime(runtime TiRuntime) {
 	})
 
 	closeMainThread()
+	runtimeRunning.Store(false)
+
 }

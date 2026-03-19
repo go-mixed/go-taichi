@@ -1,9 +1,13 @@
 package c_api
 
-import "runtime"
+import (
+	"runtime"
+	"sync/atomic"
+)
 
 var mainThreadCh chan func() any
 var resultCh chan any
+var runtimeRunning = atomic.Bool{}
 
 func runMainThread() {
 	mainThreadCh = make(chan func() any)
@@ -20,6 +24,9 @@ func runMainThread() {
 }
 
 func closeMainThread() {
+	if mainThreadCh == nil {
+		return
+	}
 	close(mainThreadCh)
 	close(resultCh)
 }
