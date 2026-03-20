@@ -44,9 +44,9 @@ def fill_texture(
     """
     填充纹理
     """
-
+    v = ti.math.vec4(r, g, b, a)
     for i, j in texture:
-        texture[i, j] = [r, g, b, a]
+        texture[i, j] = v
 
 
 
