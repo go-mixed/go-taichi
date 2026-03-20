@@ -86,18 +86,29 @@ func (m *Memory) CopyFrom(src *Memory) error {
 	return src.CopyTo(m)
 }
 
-// Invoke maps memory, executes the write function, and unmaps.
+// MapMemory maps memory, executes the write/read function, and unmaps.
 // This ensures thread safety by using syncCall which serializes all C-API calls.
-func (m *Memory) Invoke(fn func(ptr unsafe.Pointer) error) error {
-	ptr := c_api.MapMemory(m.runtime.handle, m.handle)
-	if ptr == nil {
-		return fmt.Errorf("memory mapping failed")
+func MapMemory(fn func(ptrs ...unsafe.Pointer) error, memories ...*Memory) error {
+	var mappedMemories []*Memory
+	defer func() {
+		for _, ptr := range mappedMemories {
+			ptr.unmapMemory()
+		}
+	}()
+
+	var ptrs []unsafe.Pointer
+	for _, memory := range memories {
+		ptr := c_api.MapMemory(memory.runtime.handle, memory.handle)
+		if ptr == nil {
+			return fmt.Errorf("memory mapping failed")
+		}
+		mappedMemories = append(mappedMemories, memory)
+		ptrs = append(ptrs, ptr)
 	}
-	defer c_api.UnmapMemory(m.runtime.handle, m.handle)
 
 	return c_api.SyncCall(func() error {
 		// Execute user's write function
-		return fn(ptr)
+		return fn(ptrs...)
 	})
 }
 

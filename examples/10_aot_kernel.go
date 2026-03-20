@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/go-mixed/go-taichi/taichi"
 )
@@ -13,7 +14,7 @@ func main() {
 	fmt.Println("=== AOT Kernel Basic Execution ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
+	runtime, err := taichi.NewRuntime(taichi.ArchCuda, "./lib")
 	if err != nil {
 		panic(err)
 	}
@@ -21,8 +22,13 @@ func main() {
 
 	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
+	buf, err := os.ReadFile("./examples/10_aot_kernel_cuda.tcm")
+	if err != nil {
+		fmt.Println("❌ Failed to read AOT module")
+		panic(err)
+	}
 	// Load AOT module
-	module, err := taichi.LoadAotModule(runtime, "./examples/10_aot_module.tcm")
+	module, err := taichi.LoadAotModule(runtime, buf)
 	if err != nil {
 		fmt.Printf("❌ Failed to load AOT module: %v\n", err)
 		fmt.Println("\nPlease run the following command to generate AOT module: uv run ./examples/10_aot_kenerl.py")
@@ -39,9 +45,8 @@ func main() {
 		return
 	}
 
-	fmt.Println("✅ Got kernel: add_kernel\n")
+	fmt.Println("✅ Got kernel: add_kernel\n", kernel)
 
-	// Create test data
 	n := uint32(100)
 	a, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
 	b, _ := taichi.NewNdArray1D(runtime, n, taichi.DataTypeF32)
@@ -51,14 +56,16 @@ func main() {
 	defer c.Release()
 
 	// Initialize data
-	dataA, _ := a.AsSliceFloat32()
-	dataB, _ := b.AsSliceFloat32()
-	for i := range dataA {
-		dataA[i] = float32(i)
-		dataB[i] = float32(i) * 2
+	err = taichi.NdArrayAsFloat32(func(arrays ...[]float32) error {
+		for i := range arrays[0] {
+			arrays[0][i] = float32(i)
+			arrays[1][i] = float32(i) * 2
+		}
+		return nil
+	}, a, b)
+	if err != nil {
+		panic(err)
 	}
-	a.Unmap()
-	b.Unmap()
 
 	fmt.Println("✅ Test data prepared")
 
@@ -73,10 +80,14 @@ func main() {
 	fmt.Println("✅ Kernel execution completed")
 
 	// Check results
-	dataC, _ := c.AsSliceFloat32()
-	fmt.Printf("\nFirst 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
-		dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
-	fmt.Printf("Expected results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
-		dataA[0]+dataB[0], dataA[1]+dataB[1], dataA[2]+dataB[2], dataA[3]+dataB[3], dataA[4]+dataB[4])
-	c.Unmap()
+	err = c.WithFloat32(func(dataC []float32) error {
+		fmt.Printf("\nFirst 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
+			dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
+		fmt.Printf("Expected results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
+			float32(0)+float32(0)*2, float32(1)+float32(1)*2, float32(2)+float32(2)*2, float32(3)+float32(3)*2, float32(4)+float32(4)*2)
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 }

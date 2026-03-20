@@ -91,9 +91,8 @@ func CreateAotModule(runtime TiRuntime, tcm unsafe.Pointer, size uint64) TiAotMo
 //
 //	taichi.DestroyAotModule(module)
 func DestroyAotModule(aotModule TiAotModule) {
-	SyncCall(func() uintptr {
+	SyncCallVoid(func() {
 		tiDestroyAotModule(aotModule)
-		return 0
 	})
 }
 

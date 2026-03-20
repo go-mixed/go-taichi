@@ -88,46 +88,124 @@ func (arr *NdArray) ElemSize() int {
 	return arr.elemSize
 }
 
+// AsPtr invokes fn with the array data (internal use, uses MapMemory for thread safety)
+func (arr *NdArray) AsPtr(fn func(ptr unsafe.Pointer) error) error {
+	return NdArrayAsPtr(func(ptrs ...unsafe.Pointer) error {
+		return fn(ptrs[0])
+	}, arr)
+}
+
+// NdArrayAsPtr executes fn with multiple NdArrays as unsafe.Pointer
+// All arrays must be unsafe.Pointer type. Uses MapMemory for thread safety.
+func NdArrayAsPtr(fn func(ptr ...unsafe.Pointer) error, arrays ...*NdArray) error {
+	// Extract memories
+	memories := make([]*Memory, len(arrays))
+	for i, arr := range arrays {
+		memories[i] = arr.Memory
+	}
+
+	return MapMemory(func(ptrs ...unsafe.Pointer) error {
+		return fn(ptrs...)
+	}, memories...)
+}
+
+// NdArrayAsFloat32 executes fn with multiple NdArrays as float32 slices
+// All arrays must be float32 type. Uses MapMemory for thread safety.
+func NdArrayAsFloat32(fn func(float32Arrays ...[]float32) error, arrays ...*NdArray) error {
+	// Validate all arrays are float32 type
+	for _, arr := range arrays {
+		if arr.elemType != DataTypeF32 {
+			return fmt.Errorf("array type is not float32")
+		}
+	}
+
+	// Extract memories
+	memories := make([]*Memory, len(arrays))
+	for i, arr := range arrays {
+		memories[i] = arr.Memory
+	}
+
+	return MapMemory(func(ptrs ...unsafe.Pointer) error {
+		float32Arrays := make([][]float32, len(arrays))
+		for i, arr := range arrays {
+			float32Arrays[i] = unsafe.Slice((*float32)(ptrs[i]), arr.TotalElements())
+		}
+		return fn(float32Arrays...)
+	}, memories...)
+}
+
 // WithFloat32 executes fn with the array data as a float32 slice (float32 type only)
 // The slice is only valid during the callback execution.
 func (arr *NdArray) WithFloat32(fn func([]float32) error) error {
-	if arr.elemType != DataTypeF32 {
-		return fmt.Errorf("array type is not float32")
+	return NdArrayAsFloat32(func(arrays ...[]float32) error {
+		return fn(arrays[0])
+	}, arr)
+}
+
+// NdArrayAsInt32 executes fn with multiple NdArrays as int32 slices
+// All arrays must be int32 type. Uses MapMemory for thread safety.
+func NdArrayAsInt32(fn func(int32Arrays ...[]int32) error, arrays ...*NdArray) error {
+	// Validate all arrays are int32 type
+	for _, arr := range arrays {
+		if arr.elemType != DataTypeI32 {
+			return fmt.Errorf("array type is not int32")
+		}
 	}
 
-	return arr.Invoke(func(ptr unsafe.Pointer) error {
-		length := arr.TotalElements()
-		data := unsafe.Slice((*float32)(ptr), length)
-		return fn(data)
-	})
+	// Extract memories
+	memories := make([]*Memory, len(arrays))
+	for i, arr := range arrays {
+		memories[i] = arr.Memory
+	}
+
+	return MapMemory(func(ptrs ...unsafe.Pointer) error {
+		int32Arrays := make([][]int32, len(arrays))
+		for i, arr := range arrays {
+			int32Arrays[i] = unsafe.Slice((*int32)(ptrs[i]), arr.TotalElements())
+		}
+		return fn(int32Arrays...)
+	}, memories...)
 }
 
 // WithInt32 executes fn with the array data as an int32 slice (int32 type only)
 // The slice is only valid during the callback execution.
 func (arr *NdArray) WithInt32(fn func([]int32) error) error {
-	if arr.elemType != DataTypeI32 {
-		return fmt.Errorf("array type is not int32")
+	return NdArrayAsInt32(func(arrays ...[]int32) error {
+		return fn(arrays[0])
+	}, arr)
+}
+
+// NdArrayAsUint8 executes fn with multiple NdArrays as uint8 slices
+// All arrays must be uint8 type. Uses MapMemory for thread safety.
+func NdArrayAsUint8(fn func(uint8Arrays ...[]uint8) error, arrays ...*NdArray) error {
+	// Validate all arrays are uint8 type
+	for _, arr := range arrays {
+		if arr.elemType != DataTypeU8 {
+			return fmt.Errorf("array type is not uint8")
+		}
 	}
 
-	return arr.Invoke(func(ptr unsafe.Pointer) error {
-		length := arr.TotalElements()
-		data := unsafe.Slice((*int32)(ptr), length)
-		return fn(data)
-	})
+	// Extract memories
+	memories := make([]*Memory, len(arrays))
+	for i, arr := range arrays {
+		memories[i] = arr.Memory
+	}
+
+	return MapMemory(func(ptrs ...unsafe.Pointer) error {
+		uint8Arrays := make([][]uint8, len(arrays))
+		for i, arr := range arrays {
+			uint8Arrays[i] = unsafe.Slice((*uint8)(ptrs[i]), arr.TotalElements())
+		}
+		return fn(uint8Arrays...)
+	}, memories...)
 }
 
 // WithUint8 executes fn with the array data as a uint8 slice (uint8 type only)
 // The slice is only valid during the callback execution.
 func (arr *NdArray) WithUint8(fn func([]uint8) error) error {
-	if arr.elemType != DataTypeU8 {
-		return fmt.Errorf("array type is not uint8")
-	}
-
-	return arr.Invoke(func(ptr unsafe.Pointer) error {
-		length := arr.TotalElements()
-		data := unsafe.Slice((*uint8)(ptr), length)
-		return fn(data)
-	})
+	return NdArrayAsUint8(func(arrays ...[]uint8) error {
+		return fn(arrays[0])
+	}, arr)
 }
 
 // Fill fills the array (float32)

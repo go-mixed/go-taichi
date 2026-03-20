@@ -168,10 +168,10 @@ m.archive("my_module.tcm")
 
 ### AOT Module Not Found
 
-Ensure `aot_module.tcm` exists in the examples directory:
+Ensure `10_aot_kernel_cuda.tcm` exists in the examples directory:
 
 ```bash
-ls ./examples/aot_module.tcm
+ls ./examples/10_aot_kernel_cuda.tcm
 ```
 
 If missing, generate it:
