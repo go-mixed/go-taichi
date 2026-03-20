@@ -224,30 +224,38 @@ func (kl *KernelLauncher) ArgFloat32(value float32) *KernelLauncher {
 
 // ArgNdArray adds an NdArray argument
 func (kl *KernelLauncher) ArgNdArray(arr *NdArray) *KernelLauncher {
-	// Use c_api package helper functions to create correct TiNdArray
-	var ndarray c_api.TiNdArray
+	// Build TiNdShape for shape
+	var shapeDims [16]uint32
+	for i, dim := range arr.shape {
+		if i < 16 {
+			shapeDims[i] = dim
+		}
+	}
+	shape := c_api.TiNdShape{
+		DimCount: uint32(len(arr.shape)),
+		Dims:     shapeDims,
+	}
 
-	switch len(arr.shape) {
-	case 1:
-		ndarray = c_api.NewNdArray1D(arr.Memory.handle, arr.shape[0], arr.elemType)
-	case 2:
-		ndarray = c_api.NewNdArray2D(arr.Memory.handle, arr.shape[0], arr.shape[1], arr.elemType)
-	case 3:
-		ndarray = c_api.NewNdArray3D(arr.Memory.handle, arr.shape[0], arr.shape[1], arr.shape[2], arr.elemType)
-	default:
-		// For higher dimensions, construct manually
-		var dims [16]uint32
-		for i, dim := range arr.shape {
+	// Build TiNdShape for elemShape (nil means scalar, DimCount=0)
+	var elemShape c_api.TiNdShape
+	if arr.elemShape != nil {
+		var elemDims [16]uint32
+		for i, dim := range arr.elemShape {
 			if i < 16 {
-				dims[i] = dim
+				elemDims[i] = dim
 			}
 		}
-		ndarray = c_api.TiNdArray{
-			Memory:    arr.Memory.handle,
-			Shape:     c_api.TiNdShape{DimCount: uint32(len(arr.shape)), Dims: dims},
-			ElemShape: c_api.TiNdShape{DimCount: 0, Dims: [16]uint32{}},
-			ElemType:  arr.elemType,
+		elemShape = c_api.TiNdShape{
+			DimCount: uint32(len(arr.elemShape)),
+			Dims:     elemDims,
 		}
+	}
+
+	ndarray := c_api.TiNdArray{
+		Memory:    arr.Memory.handle,
+		Shape:     shape,
+		ElemShape: elemShape,
+		ElemType:  arr.elemType,
 	}
 
 	arg := c_api.NewArgumentNdArray(ndarray)
@@ -332,27 +340,38 @@ func (gl *GraphLauncher) ArgNdArray(name string, arr *NdArray) *GraphLauncher {
 	// Use c_api package helper functions to create correct TiNdArray
 	var ndarray c_api.TiNdArray
 
-	switch len(arr.shape) {
-	case 1:
-		ndarray = c_api.NewNdArray1D(arr.Memory.handle, arr.shape[0], arr.elemType)
-	case 2:
-		ndarray = c_api.NewNdArray2D(arr.Memory.handle, arr.shape[0], arr.shape[1], arr.elemType)
-	case 3:
-		ndarray = c_api.NewNdArray3D(arr.Memory.handle, arr.shape[0], arr.shape[1], arr.shape[2], arr.elemType)
-	default:
-		// For higher dimensions, construct manually
-		var dims [16]uint32
-		for i, dim := range arr.shape {
+	// Build TiNdShape for shape
+	var shapeDims [16]uint32
+	for i, dim := range arr.shape {
+		if i < 16 {
+			shapeDims[i] = dim
+		}
+	}
+	shape := c_api.TiNdShape{
+		DimCount: uint32(len(arr.shape)),
+		Dims:     shapeDims,
+	}
+
+	// Build TiNdShape for elemShape (nil means scalar, DimCount=0)
+	var elemShape c_api.TiNdShape
+	if arr.elemShape != nil {
+		var elemDims [16]uint32
+		for i, dim := range arr.elemShape {
 			if i < 16 {
-				dims[i] = dim
+				elemDims[i] = dim
 			}
 		}
-		ndarray = c_api.TiNdArray{
-			Memory:    arr.Memory.handle,
-			Shape:     c_api.TiNdShape{DimCount: uint32(len(arr.shape)), Dims: dims},
-			ElemShape: c_api.TiNdShape{DimCount: 0, Dims: [16]uint32{}},
-			ElemType:  arr.elemType,
+		elemShape = c_api.TiNdShape{
+			DimCount: uint32(len(arr.elemShape)),
+			Dims:     elemDims,
 		}
+	}
+
+	ndarray = c_api.TiNdArray{
+		Memory:    arr.Memory.handle,
+		Shape:     shape,
+		ElemShape: elemShape,
+		ElemType:  arr.elemType,
 	}
 
 	arg := c_api.NewArgumentNdArray(ndarray)
