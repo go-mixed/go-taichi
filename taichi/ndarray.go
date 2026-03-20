@@ -2,6 +2,7 @@ package taichi
 
 import (
 	"fmt"
+	"unsafe"
 )
 
 // NdArray N-dimensional array abstraction
@@ -117,34 +118,163 @@ func (arr *NdArray) ElemSize() int {
 	return arr.elemSize
 }
 
-// NdArrayAs executes fn with multiple NdArrays as T slices
-// All arrays must be float32 type. Uses MapMemory for thread safety.
-//func NdArrayAs[T any](fn func(float32Arrays ...T) error, arrays ...*NdArray) error {
-//	if len(arrays) == 0 {
-//		return fmt.Errorf("no arrays provided")
-//	}
-//
-//	// Validate all arrays are float32 type
-//	for _, arr := range arrays {
-//		if arr.elemType != DataTypeF32 {
-//			return fmt.Errorf("array type is not float32")
-//		}
-//	}
-//
-//	// Extract memories
-//	memories := make([]*Memory, len(arrays))
-//	for i, arr := range arrays {
-//		memories[i] = arr.Memory
-//	}
-//
-//	return MapMemory(func(ptrs ...unsafe.Pointer) error {
-//		args := make([]T, len(arrays))
-//		for i, arr := range arrays {
-//			args[i] = unsafe.Slice((*T)(ptrs[i]), arr.TotalElements())
-//		}
-//		return fn(args...)
-//	}, memories...)
-//}
+func (arr *NdArray) MapFloat32(f func(data []float32) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsFloat32()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapInt64(f func(data []int64) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsInt64()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUint64(f func(data []uint64) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsUint64()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUint32(f func(data []uint32) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsUint32()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapInt32(f func(data []int32) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsInt32()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapFloat64(f func(data []float64) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsFloat64()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapInt8(f func(data []int8) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsInt8()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapInt16(f func(data []int16) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsInt16()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUint8(f func(data []uint8) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsUInt8()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUInt16(f func(data []uint16) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsUInt16()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUInt32(f func(data []uint32) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsUint32()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUInt64(f func(data []uint64) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsUint64()
+		return f(data)
+	})
+}
+
+type NdArrayPtr struct {
+	ptr unsafe.Pointer
+	arr *NdArray
+}
+
+func (p NdArrayPtr) AsInt64() []int64 {
+	return unsafe.Slice((*int64)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsUInt8() []byte {
+	return unsafe.Slice((*uint8)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsInt8() []int8 {
+	return unsafe.Slice((*int8)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsInt16() []int16 {
+	return unsafe.Slice((*int16)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsUInt16() []uint16 {
+	return unsafe.Slice((*uint16)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsFloat32() []float32 {
+	return unsafe.Slice((*float32)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsFloat64() []float64 {
+	return unsafe.Slice((*float64)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsUint32() []uint32 {
+	return unsafe.Slice((*uint32)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsUint64() []uint64 {
+	return unsafe.Slice((*uint64)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsInt32() []int32 {
+	return unsafe.Slice((*int32)(p.ptr), p.arr.TotalElements())
+}
+
+// MapNdArray executes fn with multiple NdArrays as NdArrayPtr
+// and then, you can AsFloat32(), ... to get the data
+func MapNdArray(fn func(arrays ...NdArrayPtr) error, arrays ...*NdArray) error {
+	if len(arrays) == 0 {
+		return fmt.Errorf("no arrays provided")
+	}
+
+	// Validate all arrays are float32 type
+	for _, arr := range arrays {
+		if arr.elemType != DataTypeF32 {
+			return fmt.Errorf("array type is not float32")
+		}
+	}
+
+	// Extract memories
+	memories := make([]*Memory, len(arrays))
+	for i, arr := range arrays {
+		memories[i] = arr.Memory
+	}
+
+	return MapMemory(func(ptrs ...unsafe.Pointer) error {
+		args := make([]NdArrayPtr, len(arrays))
+		for i, arr := range arrays {
+			args[i] = NdArrayPtr{ptr: ptrs[i], arr: arr}
+		}
+		return fn(args...)
+	}, memories...)
+}
 
 // getElemSize gets the element size
 func getElemSize(elemType DataType) int {

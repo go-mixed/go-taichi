@@ -56,10 +56,12 @@ func main() {
 	defer c.Release()
 
 	// Initialize data
-	err = taichi.NdArrayAsFloat32(func(arrays ...[]float32) error {
-		for i := range arrays[0] {
-			arrays[0][i] = float32(i)
-			arrays[1][i] = float32(i) * 2
+	err = taichi.MapNdArray(func(arrays ...taichi.NdArrayPtr) error {
+		_a := arrays[0].AsFloat32()
+		_b := arrays[1].AsFloat32()
+		for i := range _a {
+			_a[i] = float32(i)
+			_b[i] = float32(i) * 2
 		}
 		return nil
 	}, a, b)
@@ -80,7 +82,7 @@ func main() {
 	fmt.Println("✅ Kernel execution completed")
 
 	// Check results
-	err = c.WithFloat32(func(dataC []float32) error {
+	err = c.MapFloat32(func(dataC []float32) error {
 		fmt.Printf("\nFirst 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
 			dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
 		fmt.Printf("Expected results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
@@ -90,4 +92,26 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	//d, _ := taichi.NewNdArray3D(runtime, 1024, 1024, 4, taichi.DataTypeF32)
+	d, _ := taichi.NewNdArray2DWithElemShape(runtime, 1024, 1024, taichi.Shape(4), taichi.DataTypeF32)
+	// Get kernel
+	kernel, err = module.GetKernel("fill_texture")
+	if err != nil {
+		fmt.Printf("❌ Failed to get kernel: %v\n", err)
+		return
+	}
+
+	kernel.Launch().
+		ArgNdArray(d).
+		ArgFloat32(0.5).
+		ArgFloat32(0.5).
+		ArgFloat32(0.5).
+		ArgFloat32(1.).
+		Run()
+
+	_ = d.MapFloat32(func(data []float32) error {
+		fmt.Println("x=0, y=0, rgba=", data[0], data[1], data[2], data[3])
+		return nil
+	})
 }

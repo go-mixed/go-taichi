@@ -36,6 +36,20 @@ def add_kernel(
     for i in c:
         c[i] = a[i] + b[i]
 
+@ti.kernel
+def fill_texture(
+    texture: ti.types.ndarray(element_shape=(4,), dtype=ti.f32, ndim=2),
+    r: ti.f32, g: ti.f32, b: ti.f32, a: ti.f32
+):
+    """
+    填充纹理
+    """
+
+    for i, j in texture:
+        texture[i, j] = [r, g, b, a]
+
+
+
 
 def main():
     """Main function"""
@@ -51,8 +65,9 @@ def main():
         m = ti.aot.Module(ti.cuda)
 
         # Add kernel
-        print(f"Adding kernel: add_kernel")
+        print(f"Adding kernels")
         m.add_kernel(add_kernel)
+        m.add_kernel(fill_texture)
 
         # Save as TCM file
         output_file = "./examples/10_aot_kernel_cuda.tcm"
