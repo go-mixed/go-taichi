@@ -77,62 +77,52 @@ defer volume.Release()
 
 ## Data Access Methods
 
-### AsSliceFloat32
+### MapFloat32
 
 ```go
-func (a *NdArray) AsSliceFloat32() ([]float32, error)
+func (a *NdArray) MapFloat32(f func(data []float32) error) error
 ```
 
-Map array as Go float32 slice.
+Map array as Go float32 slice and execute function.
 
-**Returns**:
-- `[]float32` - Go slice view of array data
-- `error` - Error if type mismatch or map fails
+**Parameters**:
+- `f` - Function that receives the data slice and returns error
 
 **Example**:
 ```go
-data, _ := arr.AsSliceFloat32()
-for i := range data {
-    data[i] = float32(i) * 0.5
-}
-arr.Unmap() // Must unmap after use
+err := arr.MapFloat32(func(data []float32) error {
+    for i := range data {
+        data[i] = float32(i) * 0.5
+    }
+    return nil
+})
 ```
 
 ---
 
-### AsSliceInt32
+### MapNdArray
 
 ```go
-func (a *NdArray) AsSliceInt32() ([]int32, error)
+func MapNdArray(fn func(arrays ...NdArrayPtr) error, arrays ...*NdArray) error
 ```
 
-Map array as Go int32 slice.
+Map multiple NdArrays and execute function. All arrays must be float32 type.
 
----
-
-### AsSliceUint32
-
-```go
-func (a *NdArray) AsSliceUint32() ([]uint32, error)
-```
-
-Map array as Go uint32 slice.
-
----
-
-### Unmap
-
-```go
-func (a *NdArray) Unmap()
-```
-
-Unmap previously mapped memory. **Must be called** after accessing data.
+**Parameters**:
+- `fn` - Function that receives NdArrayPtr slices
+- `arrays` - NdArray instances to map
 
 **Example**:
 ```go
-data, _ := arr.AsSliceFloat32()
-// Use data...
-arr.Unmap() // Required!
+taichi.MapNdArray(func(arrays ...taichi.NdArrayPtr) error {
+    dataA := arrays[0].AsFloat32()
+    dataB := arrays[1].AsFloat32()
+    for i := range dataA {
+        dataA[i] = float32(i)
+        dataB[i] = float32(i) * 2
+    }
+    return nil
+}, a, b)
 ```
 
 ---
@@ -142,12 +132,12 @@ arr.Unmap() // Required!
 ### Shape
 
 ```go
-func (a *NdArray) Shape() []uint32
+func (a *NdArray) Shape() NdShape
 ```
 
 Get array dimensions.
 
-**Returns**: `[]uint32` - Array shape
+**Returns**: `NdShape` - Array shape (alias for `[]uint32`)
 
 **Example**:
 ```go
@@ -156,39 +146,27 @@ shape := arr.Shape() // [1000] for 1D, [100, 100] for 2D
 
 ---
 
-### ElemCount
+### TotalElements
 
 ```go
-func (a *NdArray) ElemCount() uint32
+func (a *NdArray) TotalElements() uint64
 ```
 
-Get total number of elements.
+Get total number of elements (including elemShape).
 
-**Returns**: `uint32` - Element count
+**Returns**: `uint64` - Total element count
 
 ---
 
-### DataType
+### ElemType
 
 ```go
-func (a *NdArray) DataType() DataType
+func (a *NdArray) ElemType() DataType
 ```
 
 Get element data type.
 
 **Returns**: `DataType` - Data type enum
-
----
-
-### IsMapped
-
-```go
-func (a *NdArray) IsMapped() bool
-```
-
-Check if array is currently mapped.
-
-**Returns**: `bool` - True if mapped
 
 ---
 

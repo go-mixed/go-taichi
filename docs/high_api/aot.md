@@ -7,27 +7,49 @@ Precompiled kernel and compute graph management.
 ### LoadAotModule
 
 ```go
-func LoadAotModule(runtime *Runtime, path string) (*AotModule, error)
+func LoadAotModule(runtime *Runtime, tcmData []byte) (*AotModule, error)
 ```
 
-Load precompiled AOT module from .tcm file.
+Load precompiled AOT module from .tcm file data.
 
 **Parameters**:
 - `runtime` - Runtime instance
-- `path` - Path to .tcm file
+- `tcmData` - Raw bytes of .tcm file (read with `os.ReadFile`)
 
 **Returns**:
 - `*AotModule` - Module instance
-- `error` - Error if file not found or invalid
+- `error` - Error if invalid
 
 **Example**:
 ```go
-module, err := taichi.LoadAotModule(runtime, "./module.tcm")
+tcmData, err := os.ReadFile("./module.tcm")
+if err != nil {
+    panic(err)
+}
+module, err := taichi.LoadAotModule(runtime, tcmData)
 if err != nil {
     panic(err)
 }
 defer module.Release()
 ```
+
+---
+
+### LoadAotModuleFile
+
+```go
+func LoadAotModuleFile(runtime *Runtime, moduleDir string) (*AotModule, error)
+```
+
+Load precompiled AOT module from directory containing `metadata.json`.
+
+**Parameters**:
+- `runtime` - Runtime instance
+- `moduleDir` - Directory path containing extracted TCM files and metadata.json
+
+**Returns**:
+- `*AotModule` - Module instance
+- `error` - Error if invalid
 
 ---
 
@@ -93,7 +115,7 @@ Free module resources.
 
 **Example**:
 ```go
-module, _ := taichi.LoadAotModule(runtime, "./module.tcm")
+module, _ := taichi.LoadAotModule(runtime, tcmData)
 defer module.Release()
 ```
 
@@ -168,8 +190,9 @@ Execute kernel asynchronously (returns immediately).
 ## Complete Example
 
 ```go
-// Load module
-module, _ := taichi.LoadAotModule(runtime, "./module.tcm")
+// Load module from .tcm file
+tcmData, _ := os.ReadFile("./module.tcm")
+module, _ := taichi.LoadAotModule(runtime, tcmData)
 defer module.Release()
 
 // Get kernel
@@ -184,14 +207,15 @@ defer b.Release()
 defer c.Release()
 
 // Fill input data
-dataA, _ := a.AsSliceFloat32()
-dataB, _ := b.AsSliceFloat32()
-for i := range dataA {
-    dataA[i] = float32(i)
-    dataB[i] = float32(i) * 2
-}
-a.Unmap()
-b.Unmap()
+taichi.MapNdArray(func(arrays ...taichi.NdArrayPtr) error {
+    dataA := arrays[0].AsFloat32()
+    dataB := arrays[1].AsFloat32()
+    for i := range dataA {
+        dataA[i] = float32(i)
+        dataB[i] = float32(i) * 2
+    }
+    return nil
+}, a, b)
 
 // Execute kernel: c = a + b
 kernel.Launch().
@@ -201,9 +225,10 @@ kernel.Launch().
     Run()
 
 // Read results
-dataC, _ := c.AsSliceFloat32()
-fmt.Printf("Result: %v\n", dataC[:5])
-c.Unmap()
+c.MapFloat32(func(dataC []float32) error {
+    fmt.Printf("Result: %v\n", dataC[:5])
+    return nil
+})
 ```
 
 ---

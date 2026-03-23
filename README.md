@@ -2,7 +2,6 @@
 
 > Pure Go bindings for Taichi C-API - High-performance GPU parallel computing
 
-
 [![Go Version](https://img.shields.io/badge/Go-1.25%2B-blue)](https://go.dev/)
 [![Taichi Version](https://img.shields.io/badge/Taichi-1.7.4-green)](https://www.taichi-lang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-orange)](LICENSE)
@@ -22,26 +21,57 @@
 go get github.com/go-mixed/go-taichi
 ```
 
-### Runtime Library
+## Important Notes
 
-Download the Taichi C-API dynamic library from [Releases](https://github.com/go-mixed/go-taichi/releases):
+### Runtime Files
 
-**Required file**:
-- Windows: `taichi_c_api.dll`
-- Linux: `libtaichi_c_api.so`
-- macOS: `libtaichi_c_api.dylib`
+Taichi C-API internal backends require runtime files which **must be located in the directory specified by `TI_LIB_DIR` environment variable**.
 
-**Library placement**:
+1. **Directory Structure**:
 
-1. **Current Working Directory** - Place in project root (recommended for development)
-2. **System PATH Directory** - Windows: `System32` or `%PATH%`; Linux/macOS: `/usr/local/lib` or `$LD_LIBRARY_PATH`/`$DYLD_LIBRARY_PATH` (recommended for production)
-3. **Custom Directory** - Any directory, specify path via `NewRuntimeAuto("./lib")`
+   ```
+   your_project/
+   └── lib/
+       ├── windows/
+       │   ├── taichi_c_api.dll
+       │   ├── runtime_x64.bc
+       │   ├── runtime_cuda.bc
+       │   ├── runtime_dx12.bc
+       │   └── slim_libdevice.10.bc
+       ├── linux/
+       │   ├── libtaichi_c_api.so
+       │   ├── runtime_x64.bc
+       │   ├── runtime_cuda.bc
+       │   └── slim_libdevice.10.bc
+       └── darwin/
+           ├── libtaichi_c_api.dylib
+           ├── libMoltenVK.dylib
+           └── runtime_arm64.bc
+   ```
+   - download "runtime.7z" from [Taichi GitHub Release](https://github.com/taichi-dev/taichi/releases) , and extract it to your project directory. 
+   - Keep only the relevant directory for your operating system
 
-**Note**: `NewRuntimeAuto("")` searches current working directory first, then system PATH; `NewRuntimeAuto("./lib")` searches specified directory first, then system PATH.
+2. **Set TI_LIB_DIR environment variable** (required for all backends):
 
-### NO-NEED C Header Files
+```powershell
+# Windows PowerShell
+$env:TI_LIB_DIR = "C:\path\to\your\project\lib\windows"
+go run your_program.go
+```
 
-The C header files in `taichi/c_api/include/` are reference files used for generating Go API bindings. They are not required at runtime.
+```bash
+# Linux
+export TI_LIB_DIR=/path/to/your/project/lib/linux
+go run your_program.go
+```
+
+```bash
+# macOS
+export TI_LIB_DIR=/path/to/your/project/lib/darwin
+go run your_program.go
+```
+
+**Note**: `TI_LIB_DIR` must point to the platform-specific directory containing `.bc` files. The dynamic library should be in the same directory or in the system PATH.
 
 ## Quick Start
 
@@ -52,26 +82,26 @@ package main
 
 import (
     "fmt"
+    "os"
     "github.com/go-mixed/go-taichi/taichi"
 )
 
 func main() {
-	
+
     // 1. Create runtime (auto-select best backend)
-    // Option 1: Load from current directory or system PATH
-    runtime, err := taichi.NewRuntimeAuto("")
-
-    // Option 2: Load from custom directory (e.g., "./lib", "/opt/taichi")
-    // runtime, err := taichi.NewRuntimeAuto("./lib")
-
+    runtime, err := taichi.NewRuntimeAuto()
     if err != nil {
         panic(err)
     }
     defer runtime.Release()
     fmt.Printf("Backend: %s\n", runtime.ArchName())
 
-    // 2. Load precompiled AOT module
-    module, err := taichi.LoadAotModule(runtime, "./module.tcm")
+    // 2. Load precompiled AOT module from .tcm file
+    tcmData, err := os.ReadFile("./module.tcm")
+    if err != nil {
+        panic(err)
+    }
+    module, err := taichi.LoadAotModule(runtime, tcmData)
     if err != nil {
         panic(err)
     }
@@ -93,14 +123,15 @@ func main() {
     defer c.Release()
 
     // 5. Fill input data
-    dataA, _ := a.AsSliceFloat32()
-    dataB, _ := b.AsSliceFloat32()
-    for i := range dataA {
-        dataA[i] = float32(i)
-        dataB[i] = float32(i) * 2
-    }
-    a.Unmap()
-    b.Unmap()
+    taichi.MapNdArray(func(arrays ...taichi.NdArrayPtr) error {
+        dataA := arrays[0].AsFloat32()
+        dataB := arrays[1].AsFloat32()
+        for i := range dataA {
+            dataA[i] = float32(i)
+            dataB[i] = float32(i) * 2
+        }
+        return nil
+    }, a, b)
 
     // 6. Execute kernel: c = a + b
     kernel.Launch().
@@ -110,10 +141,11 @@ func main() {
         Run()
 
     // 7. Read results
-    dataC, _ := c.AsSliceFloat32()
-    fmt.Printf("Results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
-        dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
-    c.Unmap()
+    c.MapFloat32(func(dataC []float32) error {
+        fmt.Printf("Results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
+            dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
+        return nil
+    })
 }
 ```
 
@@ -125,7 +157,7 @@ Results: [0.0, 3.0, 6.0, 9.0, 12.0]
 
 This example demonstrates:
 - ✅ Runtime creation and backend selection
-- ✅ AOT module loading
+- ✅ AOT module loading from .tcm file
 - ✅ NdArray creation and data access
 - ✅ Kernel execution with builder pattern
 - ✅ Automatic resource management with `defer`
@@ -143,69 +175,22 @@ This example demonstrates:
 
 **Recommendation**: Use Vulkan (best cross-platform) or CUDA (NVIDIA GPU).
 
-## Important Notes
-
-### Runtime Files
-
-Taichi C-API internal backends require runtime files (`.bc` files) which **must be located in the directory specified by `TI_LIB_DIR` environment variable**.
-
-1. **Directory Structure**:
-
-   ```
-   your_project/
-   └── lib/
-       ├── windows/
-       │   ├── taichi_c_api.dll
-       │   ├── taichi_c_api.lib
-       │   ├── runtime_x64.bc
-       │   ├── runtime_cuda.bc
-       │   ├── runtime_dx12.bc
-       │   └── slim_libdevice.10.bc
-       ├── linux/
-       │   ├── libtaichi_c_api.so
-       │   ├── runtime_x64.bc
-       │   ├── runtime_cuda.bc
-       │   └── slim_libdevice.10.bc
-       └── darwin/
-           ├── libtaichi_c_api.dylib
-           ├── libMoltenVK.dylib
-           └── runtime_arm64.bc
-   ```
-
-2. **Set TI_LIB_DIR environment variable** (required for all backends):
-
-```powershell
-# Windows PowerShell (run before your Go program)
-$env:TI_LIB_DIR = "C:\path\to\your\project\lib\windows"
-go run your_program.go
-```
-
-```bash
-# Linux
-export TI_LIB_DIR=/path/to/your/project/lib/linux
-go run your_program.go
-```
-
-```bash
-# macOS
-export TI_LIB_DIR=/path/to/your/project/lib/darwin
-go run your_program.go
-```
-
-**Note**: `TI_LIB_DIR` must point to the platform-specific directory containing `.bc` files. The dynamic library should be in the same directory or in the system PATH.
-
 ## Examples
 
-See [examples/](examples/) directory:
+See [examples/](examples/) directory for complete working examples.
 
-| Example | Description | Level |
-|---------|-------------|-------|
-| `01_basic.go` | Basic runtime and memory | ⭐ |
-| `02_ndarray.go` | N-dimensional arrays | ⭐ |
-| `03_image.go` | Image processing | ⭐⭐ |
+| Example | Feature | Level |
+|---------|---------|-------|
+| `01_runtime.go` | Runtime creation and management | ⭐ |
+| `02_ndarray_1d.go` | 1D array operations | ⭐ |
+| `03_ndarray_2d.go` | 2D matrix operations | ⭐ |
+| `04_image.go` | Image operations | ⭐ |
 | `10_aot_kernel.go` | AOT kernel execution | ⭐⭐ |
-| `11_aot_async.go` | Async execution | ⭐⭐⭐ |
-| `12_aot_batch.go` | Batch execution | ⭐⭐⭐ |
+| `11_aot_async.go` | Async kernel execution | ⭐⭐ |
+| `12_aot_batch.go` | Batch kernel execution | ⭐⭐ |
+| `13_compute_graph.go` | Compute graph execution | ⭐⭐⭐ |
+| `20_memory_cpu.go` | CPU memory import | ⭐⭐⭐ |
+| `21_memory_cuda.go` | CUDA memory import | ⭐⭐⭐⭐ |
 
 ## Documentation
 
@@ -221,10 +206,6 @@ See [examples/](examples/) directory:
   - Fine-grained control
   - Performance-critical operations
 
-### Examples
-
-See [examples/](examples/) directory for complete working examples.
-
 ## License
 
 Apache 2.0 License - see [LICENSE](LICENSE) file.
@@ -236,4 +217,4 @@ Apache 2.0 License - see [LICENSE](LICENSE) file.
 
 ---
 
-**Version**: v1.0.0 | **Taichi**: v1.7.4 | **Go**: 1.25+ | **Updated**: 2026-02-19
+**Version**: v1.0.0 | **Taichi**: v1.7.4 | **Go**: 1.25+ | **Updated**: 2026-03-23

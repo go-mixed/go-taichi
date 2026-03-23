@@ -10,19 +10,38 @@ Ahead-of-Time compiled module management.
 func LoadAotModule(runtime TiRuntime, modulePath string) TiAotModule
 ```
 
-Load precompiled AOT module (.tcm file).
+Load precompiled AOT module from directory.
 
 **Parameters**:
 - `runtime` - Runtime handle
-- `modulePath` - Path to .tcm file
+- `modulePath` - Path to directory containing extracted TCM files and metadata.json
 
 **Returns**: `TiAotModule` - Module handle
 
 **Example**:
 ```go
-module := c_api.LoadAotModule(runtime, "./module.tcm")
+module := c_api.LoadAotModule(runtime, "./module_dir")
 defer c_api.DestroyAotModule(module)
 ```
+
+---
+
+### CreateAotModule
+
+```go
+func CreateAotModule(runtime TiRuntime, tcm unsafe.Pointer, size uint64) TiAotModule
+```
+
+Create AOT module from raw TCM data (Vulkan backend only).
+
+**Parameters**:
+- `runtime` - Runtime handle
+- `tcm` - Pointer to TCM data
+- `size` - Size of TCM data in bytes
+
+**Returns**: `TiAotModule` - Module handle
+
+---
 
 ### DestroyAotModule
 

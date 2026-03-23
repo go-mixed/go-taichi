@@ -7,13 +7,10 @@ Runtime management and backend selection.
 ### NewRuntimeAuto
 
 ```go
-func NewRuntimeAuto(libDir string) (*Runtime, error)
+func NewRuntimeAuto() (*Runtime, error)
 ```
 
 Automatically select the best available backend.
-
-**Parameters**:
-- `libDir` - Path to taichi library directory
 
 **Returns**:
 - `*Runtime` - Runtime instance
@@ -23,7 +20,7 @@ Automatically select the best available backend.
 
 **Example**:
 ```go
-runtime, err := taichi.NewRuntimeAuto("/path/to/taichi/lib")
+runtime, err := taichi.NewRuntimeAuto()
 if err != nil {
     panic(err)
 }
@@ -35,14 +32,13 @@ defer runtime.Release()
 ### NewRuntime
 
 ```go
-func NewRuntime(arch Arch, libDir string) (*Runtime, error)
+func NewRuntime(arch Arch) (*Runtime, error)
 ```
 
 Create runtime with specific backend.
 
 **Parameters**:
 - `arch` - Backend architecture (e.g., `ArchVulkan`, `ArchCUDA`)
-- `libDir` - Path to taichi library directory
 
 **Returns**:
 - `*Runtime` - Runtime instance
@@ -50,7 +46,7 @@ Create runtime with specific backend.
 
 **Example**:
 ```go
-runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "/path/to/taichi/lib")
+runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
 if err != nil {
     panic(err)
 }
@@ -116,7 +112,7 @@ Free runtime resources. Must be called when done.
 
 **Example**:
 ```go
-runtime, _ := taichi.NewRuntimeAuto("/path/to/taichi/lib")
+runtime, _ := taichi.NewRuntimeAuto()
 defer runtime.Release() // Automatic cleanup
 ```
 
