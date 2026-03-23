@@ -10,16 +10,30 @@ import (
 type Runtime struct {
 	handle c_api.TiRuntime
 	arch   Arch
+
+	options *runtimeOptions
+}
+
+type runtimeOptions struct {
+	cacheTcm bool
+}
+
+func WithCacheTcm(cacheTcm bool) func(opt *runtimeOptions) {
+	return func(opt *runtimeOptions) {
+		opt.cacheTcm = cacheTcm
+	}
 }
 
 // NewRuntime creates a new runtime
 //
 // Parameters:
 //   - arch: Compute architecture. If 0, automatically selects the best architecture
-//   - libDir: Dynamic library directory path
-//   - Empty string (""): Search in current working directory first, then in system PATH
-//   - Non-empty path: Search in specified directory first, then in system PATH
-func NewRuntime(arch Arch) (*Runtime, error) {
+func NewRuntime(arch Arch, opts ...func(*runtimeOptions)) (*Runtime, error) {
+	options := &runtimeOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	// Initialize C-API
 	if err := initial(); err != nil {
 		return nil, fmt.Errorf("initialization failed: %w", err)
@@ -42,8 +56,9 @@ func NewRuntime(arch Arch) (*Runtime, error) {
 	}
 
 	return &Runtime{
-		handle: handle,
-		arch:   arch,
+		handle:  handle,
+		arch:    arch,
+		options: options,
 	}, nil
 }
 
@@ -55,8 +70,8 @@ func NewRuntime(arch Arch) (*Runtime, error) {
 //   - Non-empty path: Search in specified directory first, then in system PATH
 //
 // Architecture selection priority: Vulkan > CUDA > x64 > ARM64 > OpenGL
-func NewRuntimeAuto() (*Runtime, error) {
-	return NewRuntime(0)
+func NewRuntimeAuto(opts ...func(*runtimeOptions)) (*Runtime, error) {
+	return NewRuntime(0, opts...)
 }
 
 // Release releases runtime resources

@@ -3,6 +3,7 @@ package taichi
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/md5"
 	"fmt"
 	"io"
 	"os"
@@ -58,7 +59,8 @@ func LoadAotModule(runtime *Runtime, tcmData []byte) (*AotModule, error) {
 
 	// Other backends (CPU/CUDA) require extracted TCM files
 	// Extract TCM zip to temp directory
-	tempDir, err := extractTCMToDir(tcmData)
+	useCache := runtime.options.cacheTcm
+	tempDir, err := extractTCMToDir(tcmData, useCache)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract TCM: %w", err)
 	}
@@ -79,15 +81,46 @@ func LoadAotModule(runtime *Runtime, tcmData []byte) (*AotModule, error) {
 }
 
 // extractTCMToDir extracts TCM zip data to a temporary directory
-func extractTCMToDir(tcmData []byte) (string, error) {
-	tempDir, err := os.MkdirTemp("", "taichi_tcm_*")
-	if err != nil {
-		return "", fmt.Errorf("failed to create temp directory: %w", err)
+// Parameters:
+//   - tcmData: TCM zip data
+//   - useCache: if true, identical tcmData (by md5) reuses cached temp directory; if false, always creates new temp directory
+func extractTCMToDir(tcmData []byte, useCache bool) (string, error) {
+	var tempDir string
+	var err error
+
+	if useCache {
+		// Use md5 as directory name for deterministic caching
+		hash := md5.Sum(tcmData)
+		hashStr := fmt.Sprintf("%x", hash)
+		tempDir = filepath.Join(os.TempDir(), fmt.Sprintf("taichi_tcm_%s", hashStr))
+
+		// Check if cached directory already exists
+		if _, statErr := os.Stat(tempDir); statErr == nil {
+			// Directory exists, reuse it
+			return tempDir, nil
+		}
+
+		// Create the cache directory
+		if mkErr := os.MkdirAll(tempDir, 0755); mkErr != nil {
+			return "", fmt.Errorf("failed to create cache directory: %w", mkErr)
+		}
+	} else {
+		// Create a unique temp directory each time
+		tempDir, err = os.MkdirTemp("", "taichi_tcm_*")
+		if err != nil {
+			return "", fmt.Errorf("failed to create temp directory: %w", err)
+		}
+	}
+
+	shouldRemove := func() {
+		if !useCache {
+			os.RemoveAll(tempDir)
+		}
 	}
 
 	reader, err := zip.NewReader(bytes.NewReader(tcmData), int64(len(tcmData)))
 	if err != nil {
-		os.RemoveAll(tempDir)
+		shouldRemove()
 		return "", fmt.Errorf("failed to read TCM zip: %w", err)
 	}
 
@@ -96,7 +129,7 @@ func extractTCMToDir(tcmData []byte) (string, error) {
 
 		if file.FileInfo().IsDir() {
 			if err := os.MkdirAll(path, 0755); err != nil {
-				os.RemoveAll(tempDir)
+				shouldRemove()
 				return "", fmt.Errorf("failed to create directory: %w", err)
 			}
 			continue
@@ -104,27 +137,29 @@ func extractTCMToDir(tcmData []byte) (string, error) {
 
 		// Ensure parent directory exists
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			os.RemoveAll(tempDir)
+			shouldRemove()
+
 			return "", fmt.Errorf("failed to create parent directory: %w", err)
 		}
 
 		src, err := file.Open()
 		if err != nil {
-			os.RemoveAll(tempDir)
+			shouldRemove()
+
 			return "", fmt.Errorf("failed to open zip entry: %w", err)
 		}
 
 		dst, err := os.Create(path)
 		if err != nil {
 			src.Close()
-			os.RemoveAll(tempDir)
+			shouldRemove()
 			return "", fmt.Errorf("failed to create file: %w", err)
 		}
 
 		if _, err := io.Copy(dst, src); err != nil {
 			src.Close()
 			dst.Close()
-			os.RemoveAll(tempDir)
+			shouldRemove()
 			return "", fmt.Errorf("failed to extract file: %w", err)
 		}
 
@@ -136,16 +171,14 @@ func extractTCMToDir(tcmData []byte) (string, error) {
 }
 
 // Release releases the AOT module
+// Note: tempDir is not deleted because it may be shared with other AotModule instances via TCM cache
 func (m *AotModule) Release() {
 	if m.handle != c_api.TI_NULL_HANDLE {
 		c_api.DestroyAotModule(m.handle)
 		m.handle = c_api.TI_NULL_HANDLE
 	}
-	// Clean up temp directory if created for non-Vulkan backends
-	if m.tempDir != "" {
-		os.RemoveAll(m.tempDir)
-		m.tempDir = ""
-	}
+	// tempDir is intentionally not deleted - it's cached by md5 hash for reuse
+	m.tempDir = ""
 }
 
 // GetKernel gets a kernel with the specified name
