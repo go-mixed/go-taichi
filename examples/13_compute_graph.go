@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("=== Compute Graph Example ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
+	runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
 	if err != nil {
 		panic(err)
 	}
@@ -21,8 +21,8 @@ func main() {
 
 	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// Load AOT module
-	module, err := taichi.LoadAotModule(runtime, "./exmaples/10_aot_module.tcm")
+	// Load AOT module (directory containing metadata.json)
+	module, err := taichi.LoadAotModuleFile(runtime, "./examples")
 	if err != nil {
 		fmt.Printf("❌ Failed to load AOT module: %v\n", err)
 		fmt.Println("\nPlease run the following command to generate AOT module with Compute Graph:")
@@ -55,14 +55,18 @@ func main() {
 	defer c.Release()
 
 	// Initialize input data
-	dataA, _ := a.AsSliceFloat32()
-	dataB, _ := b.AsSliceFloat32()
-	for i := range dataA {
-		dataA[i] = float32(i)
-		dataB[i] = float32(i) * 2
+	err = taichi.MapNdArray(func(arrays ...taichi.NdArrayPtr) error {
+		_a := arrays[0].AsFloat32()
+		_b := arrays[1].AsFloat32()
+		for i := range _a {
+			_a[i] = float32(i)
+			_b[i] = float32(i) * 2
+		}
+		return nil
+	}, a, b)
+	if err != nil {
+		panic(err)
 	}
-	a.Unmap()
-	b.Unmap()
 
 	fmt.Println("✅ Test data prepared")
 
@@ -78,23 +82,31 @@ func main() {
 	fmt.Println("✅ Compute Graph execution completed")
 
 	// Check results
-	dataC, _ := c.AsSliceFloat32()
-	fmt.Printf("\nFirst 10 results: ")
-	for i := 0; i < 10 && i < len(dataC); i++ {
-		fmt.Printf("%.1f ", dataC[i])
+	err = c.MapFloat32(func(dataC []float32) error {
+		fmt.Printf("\nFirst 10 results: ")
+		for i := 0; i < 10 && i < len(dataC); i++ {
+			fmt.Printf("%.1f ", dataC[i])
+		}
+		fmt.Println()
+		return nil
+	})
+	if err != nil {
+		panic(err)
 	}
-	fmt.Println()
-	c.Unmap()
 
 	// Asynchronous execution example
 	fmt.Println("\n--- Asynchronous Execution ---")
 
 	// Reset data
-	dataA, _ = a.AsSliceFloat32()
-	for i := range dataA {
-		dataA[i] = float32(i) * 0.1
+	err = a.MapFloat32(func(dataA []float32) error {
+		for i := range dataA {
+			dataA[i] = float32(i) * 0.1
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
 	}
-	a.Unmap()
 
 	// Execute asynchronously
 	graph.Launch().
@@ -111,10 +123,14 @@ func main() {
 	fmt.Println("✅ Asynchronous task completed")
 
 	// Check results
-	dataC, _ = c.AsSliceFloat32()
-	fmt.Printf("\nAsync execution first 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
-		dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
-	c.Unmap()
+	err = c.MapFloat32(func(dataC []float32) error {
+		fmt.Printf("\nAsync execution first 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
+			dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println("\n=== Example Complete ===")
 	fmt.Println("\n💡 Compute Graph vs Kernel:")

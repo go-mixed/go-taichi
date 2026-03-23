@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("=== AOT Kernel Asynchronous Execution ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
+	runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
 	if err != nil {
 		panic(err)
 	}
@@ -21,11 +21,11 @@ func main() {
 
 	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// Load AOT module
-	module, err := taichi.LoadAotModule(runtime, "./examples/10_aot_module.tcm")
+	// Load AOT module (directory containing metadata.json)
+	module, err := taichi.LoadAotModuleFile(runtime, "./examples")
 	if err != nil {
 		fmt.Printf("❌ Failed to load AOT module: %v\n", err)
-		fmt.Println("\nPlease run the following command to generate AOT module: uv run ./examples/10_aot_kenerl.py")
+		fmt.Println("\nPlease run the following command to generate AOT module: uv run ./examples/10_aot_kernel.py")
 		return
 	}
 	defer module.Release()
@@ -49,14 +49,18 @@ func main() {
 	defer c.Release()
 
 	// Initialize data
-	dataA, _ := a.AsSliceFloat32()
-	dataB, _ := b.AsSliceFloat32()
-	for i := range dataA {
-		dataA[i] = float32(i) * 0.5
-		dataB[i] = float32(i) * 1.5
+	err = taichi.MapNdArray(func(arrays ...taichi.NdArrayPtr) error {
+		_a := arrays[0].AsFloat32()
+		_b := arrays[1].AsFloat32()
+		for i := range _a {
+			_a[i] = float32(i) * 0.5
+			_b[i] = float32(i) * 1.5
+		}
+		return nil
+	}, a, b)
+	if err != nil {
+		panic(err)
 	}
-	a.Unmap()
-	b.Unmap()
 
 	fmt.Println("✅ Test data prepared")
 
@@ -77,10 +81,14 @@ func main() {
 	fmt.Println("✅ Asynchronous task completed")
 
 	// Check results
-	dataC, _ := c.AsSliceFloat32()
-	fmt.Printf("\nFirst 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
-		dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
-	c.Unmap()
+	err = c.MapFloat32(func(dataC []float32) error {
+		fmt.Printf("\nFirst 5 results: [%.1f, %.1f, %.1f, %.1f, %.1f]\n",
+			dataC[0], dataC[1], dataC[2], dataC[3], dataC[4])
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println("\n=== Example Complete ===")
 	fmt.Println("\n💡 Key Points:")

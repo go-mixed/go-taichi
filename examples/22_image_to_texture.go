@@ -48,8 +48,8 @@ func LoadImageToTexture(rt *taichi.Runtime, filePath string) (*taichi.NdArray, e
 		return nil, fmt.Errorf("create texture failed: %w", err)
 	}
 
-	// Get data slice for writing
-	err = texture.WithFloat32(func(data []float32) error {
+	// Write image pixels to texture
+	err = texture.MapFloat32(func(data []float32) error {
 		// Copy image pixels to texture
 		for y := 0; y < height; y++ {
 			for x := 0; x < width; x++ {
@@ -78,7 +78,7 @@ func main() {
 	fmt.Println("=== Image to Texture Example ===\n")
 
 	// Create runtime (use Vulkan for best compatibility)
-	rt, err := taichi.NewRuntime(taichi.ArchCuda, "lib/")
+	rt, err := taichi.NewRuntime(taichi.ArchVulkan)
 	if err != nil {
 		panic(fmt.Sprintf("create runtime failed: %v", err))
 	}
@@ -109,7 +109,7 @@ func main() {
 	outImg := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	// Read back texture data to verify
-	err = texture.WithFloat32(func(data []float32) error {
+	err = texture.MapFloat32(func(data []float32) error {
 		// Create output image
 		for y := 0; y < height; y++ {
 			for x := 0; x < width; x++ {

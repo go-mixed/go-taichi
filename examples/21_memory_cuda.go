@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("=== CUDA Memory Import and Stream Management ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntimeAuto("")
+	runtime, err := taichi.NewRuntimeAuto()
 	if err != nil {
 		panic(err)
 	}

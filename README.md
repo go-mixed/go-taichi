@@ -147,43 +147,52 @@ This example demonstrates:
 
 ### Runtime Files
 
-Taichi C-API internal backends require runtime files (`.bc` files) which **cannot be loaded from Go code** due to subprocess initialization.
+Taichi C-API internal backends require runtime files (`.bc` files) which **must be located in the directory specified by `TI_LIB_DIR` environment variable**.
 
-1. **Copy runtime files** from Python Taichi installation:
+1. **Directory Structure**:
 
-   Find the runtime directory:
-   ```bash
-   python -c "import os; import taichi as ti; p = os.path.join(ti.__path__[0], '_lib', 'runtime'); print(p)"
-   # Example output: C:/Python311/Lib/site-packages/taichi/_lib/runtime
-   ```
-
-   Copy the entire `runtime` folder to your project:
    ```
    your_project/
-   ├── lib/
-   │   ├── taichi_c_api.dll    # or .so/.dylib
-   │   └── runtime/            # copied from Python Taichi
-   │       ├── runtime_x64.bc      # CPU backend
-   │       ├── runtime_cuda.bc     # CUDA backend
-   │       ├── runtime_dx12.bc     # DX12 backend
-   │       └── slim_libdevice.10.bc # CUDA math library
+   └── lib/
+       ├── windows/
+       │   ├── taichi_c_api.dll
+       │   ├── taichi_c_api.lib
+       │   ├── runtime_x64.bc
+       │   ├── runtime_cuda.bc
+       │   ├── runtime_dx12.bc
+       │   └── slim_libdevice.10.bc
+       ├── linux/
+       │   ├── libtaichi_c_api.so
+       │   ├── runtime_x64.bc
+       │   ├── runtime_cuda.bc
+       │   └── slim_libdevice.10.bc
+       └── darwin/
+           ├── libtaichi_c_api.dylib
+           ├── libMoltenVK.dylib
+           └── runtime_arm64.bc
    ```
 
-2. **Set environment variable externally** (required for non-Vulkan backends):
+2. **Set TI_LIB_DIR environment variable** (required for all backends):
 
 ```powershell
 # Windows PowerShell (run before your Go program)
-$env:TI_LIB_DIR = "C:\path\to\your\project\lib\runtime"
+$env:TI_LIB_DIR = "C:\path\to\your\project\lib\windows"
 go run your_program.go
 ```
 
 ```bash
-# Linux/macOS
-export TI_LIB_DIR=/path/to/your/project/lib/runtime
+# Linux
+export TI_LIB_DIR=/path/to/your/project/lib/linux
 go run your_program.go
 ```
 
-**Recommendation**: Use Vulkan backend which does not require `TI_LIB_DIR`.
+```bash
+# macOS
+export TI_LIB_DIR=/path/to/your/project/lib/darwin
+go run your_program.go
+```
+
+**Note**: `TI_LIB_DIR` must point to the platform-specific directory containing `.bc` files. The dynamic library should be in the same directory or in the system PATH.
 
 ## Examples
 

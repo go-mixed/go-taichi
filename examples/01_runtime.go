@@ -14,7 +14,7 @@ func main() {
 
 	// Method 1: Auto-select best architecture
 	fmt.Println("--- Method 1: Auto-select Architecture ---")
-	runtime1, err := taichi.NewRuntimeAuto("")
+	runtime1, err := taichi.NewRuntimeAuto()
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +32,7 @@ func main() {
 	fmt.Printf("Available architectures: %d\n", len(archs))
 	for i, arch := range archs {
 		// Create temporary runtime to get architecture name
-		tmpRuntime, _ := taichi.NewRuntime(arch, "")
+		tmpRuntime, _ := taichi.NewRuntime(arch)
 		if tmpRuntime != nil {
 			fmt.Printf("  [%d] %s\n", i, tmpRuntime.ArchName())
 			tmpRuntime.Release()
@@ -41,7 +41,7 @@ func main() {
 
 	// Use the first available architecture
 	if len(archs) > 0 {
-		runtime2, err := taichi.NewRuntime(archs[0], "")
+		runtime2, err := taichi.NewRuntime(archs[0])
 		if err != nil {
 			panic(err)
 		}
@@ -53,7 +53,7 @@ func main() {
 	fmt.Println("\n=== Example Complete ===")
 	fmt.Println("\n💡 Key Points:")
 	fmt.Println("   • Use defer runtime.Release() to ensure resource cleanup")
-	fmt.Println("   • NewRuntimeAuto(\"\") auto-selects best architecture")
-	fmt.Println("   • NewRuntime(arch, \"\") manually specifies architecture")
+	fmt.Println("   • NewRuntimeAuto() auto-selects best architecture")
+	fmt.Println("   • NewRuntime(arch) manually specifies architecture")
 	fmt.Println("   • Priority: Vulkan > CUDA > CPU")
 }

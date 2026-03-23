@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("=== 1D Array Operations Example ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntimeAuto("")
+	runtime, err := taichi.NewRuntimeAuto()
 	if err != nil {
 		panic(err)
 	}

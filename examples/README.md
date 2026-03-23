@@ -2,6 +2,8 @@
 
 Complete working examples demonstrating Go-Taichi features.
 
+**Prerequisites**: Set `TI_LIB_DIR` environment variable before running. See [lib directory structure](../README.md#runtime-files) in the main README.
+
 ## Examples Index
 
 ### Basic Examples (01-09)
@@ -33,7 +35,7 @@ Complete working examples demonstrating Go-Taichi features.
 
 ## Quick Start
 
-### 1. Basic Examples (No Prerequisites)
+### 1. Basic Examples
 
 ```bash
 # Runtime management

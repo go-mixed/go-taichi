@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("=== CPU Memory Import Example ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntimeAuto("")
+	runtime, err := taichi.NewRuntimeAuto()
 	if err != nil {
 		panic(err)
 	}

@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("=== 2D Matrix Operations Example ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntimeAuto("")
+	runtime, err := taichi.NewRuntimeAuto()
 	if err != nil {
 		panic(err)
 	}
@@ -38,39 +38,39 @@ func main() {
 
 	// Initialize as identity matrix
 	fmt.Println("--- Initialize as Identity Matrix ---")
-	data, err := matrix.AsSliceFloat32()
+	err = matrix.MapFloat32(func(data []float32) error {
+		for i := uint32(0); i < rows; i++ {
+			for j := uint32(0); j < cols; j++ {
+				if i == j {
+					data[i*cols+j] = 1.0
+				} else {
+					data[i*cols+j] = 0.0
+				}
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		panic(err)
 	}
-
-	for i := uint32(0); i < rows; i++ {
-		for j := uint32(0); j < cols; j++ {
-			if i == j {
-				data[i*cols+j] = 1.0
-			} else {
-				data[i*cols+j] = 0.0
-			}
-		}
-	}
-	matrix.Unmap()
 
 	fmt.Println("✅ Initialization complete\n")
 
 	// Read and print matrix
 	fmt.Println("--- Matrix Content ---")
-	data, err = matrix.AsSliceFloat32()
+	err = matrix.MapFloat32(func(data []float32) error {
+
+		for i := uint32(0); i < rows; i++ {
+			for j := uint32(0); j < cols; j++ {
+				fmt.Printf("%.0f ", data[i*cols+j])
+			}
+			fmt.Println()
+		}
+		return nil
+	})
 	if err != nil {
 		panic(err)
 	}
-
-	for i := uint32(0); i < rows; i++ {
-		for j := uint32(0); j < cols; j++ {
-			fmt.Printf("%.0f ", data[i*cols+j])
-		}
-		fmt.Println()
-	}
-
-	matrix.Unmap()
 
 	fmt.Println("\n=== Example Complete ===")
 	fmt.Println("\n💡 Key Points:")

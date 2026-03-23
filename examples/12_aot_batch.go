@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("=== AOT Kernel Batch Execution ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntime(taichi.ArchVulkan, "")
+	runtime, err := taichi.NewRuntime(taichi.ArchVulkan)
 	if err != nil {
 		panic(err)
 	}
@@ -21,11 +21,11 @@ func main() {
 
 	fmt.Printf("✅ Runtime: %s\n\n", runtime.ArchName())
 
-	// Load AOT module
-	module, err := taichi.LoadAotModule(runtime, "./examples/10_aot_module.tcm")
+	// Load AOT module (directory containing metadata.json)
+	module, err := taichi.LoadAotModuleFile(runtime, "./examples")
 	if err != nil {
 		fmt.Printf("❌ Failed to load AOT module: %v\n", err)
-		fmt.Println("\nPlease run the following command to generate AOT module: uv run ./examples/10_aot_kenerl.py")
+		fmt.Println("\nPlease run the following command to generate AOT module: uv run ./examples/10_aot_kernel.py")
 		return
 	}
 	defer module.Release()
@@ -47,14 +47,18 @@ func main() {
 	defer b.Release()
 
 	// Initialize input data
-	dataA, _ := a.AsSliceFloat32()
-	dataB, _ := b.AsSliceFloat32()
-	for i := range dataA {
-		dataA[i] = float32(i) * 0.5
-		dataB[i] = float32(i) * 1.5
+	err = taichi.MapNdArray(func(arrays ...taichi.NdArrayPtr) error {
+		_a := arrays[0].AsFloat32()
+		_b := arrays[1].AsFloat32()
+		for i := range _a {
+			_a[i] = float32(i) * 0.5
+			_b[i] = float32(i) * 1.5
+		}
+		return nil
+	}, a, b)
+	if err != nil {
+		panic(err)
 	}
-	a.Unmap()
-	b.Unmap()
 
 	// Create multiple output arrays
 	batchSize := 5
@@ -87,9 +91,10 @@ func main() {
 	// Verify results
 	fmt.Println("\n--- Verifying Results ---")
 	for i := 0; i < batchSize; i++ {
-		data, _ := results[i].AsSliceFloat32()
-		fmt.Printf("Result %d first 3: [%.1f, %.1f, %.1f]\n", i+1, data[0], data[1], data[2])
-		results[i].Unmap()
+		results[i].MapFloat32(func(data []float32) error {
+			fmt.Printf("Result %d first 3: [%.1f, %.1f, %.1f]\n", i+1, data[0], data[1], data[2])
+			return nil
+		})
 	}
 
 	fmt.Println("\n=== Example Complete ===")

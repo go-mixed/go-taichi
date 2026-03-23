@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("=== AOT Kernel Basic Execution ===\n")
 
 	// Create runtime
-	runtime, err := taichi.NewRuntime(taichi.ArchCuda, "./lib")
+	runtime, err := taichi.NewRuntime(taichi.ArchCuda)
 	if err != nil {
 		panic(err)
 	}
