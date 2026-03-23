@@ -225,30 +225,12 @@ func (kl *KernelLauncher) ArgFloat32(value float32) *KernelLauncher {
 // ArgNdArray adds an NdArray argument
 func (kl *KernelLauncher) ArgNdArray(arr *NdArray) *KernelLauncher {
 	// Build TiNdShape for shape
-	var shapeDims [16]uint32
-	for i, dim := range arr.shape {
-		if i < 16 {
-			shapeDims[i] = dim
-		}
-	}
-	shape := c_api.TiNdShape{
-		DimCount: uint32(len(arr.shape)),
-		Dims:     shapeDims,
-	}
+	shape := c_api.ToTiNdShape(arr.shape)
 
 	// Build TiNdShape for elemShape (nil means scalar, DimCount=0)
 	var elemShape c_api.TiNdShape
 	if arr.elemShape != nil {
-		var elemDims [16]uint32
-		for i, dim := range arr.elemShape {
-			if i < 16 {
-				elemDims[i] = dim
-			}
-		}
-		elemShape = c_api.TiNdShape{
-			DimCount: uint32(len(arr.elemShape)),
-			Dims:     elemDims,
-		}
+		elemShape = c_api.ToTiNdShape(arr.elemShape)
 	}
 
 	ndarray := c_api.TiNdArray{

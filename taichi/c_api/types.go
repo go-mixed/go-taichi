@@ -402,6 +402,18 @@ type TiNdShape struct {
 	Dims     [16]uint32
 }
 
+func ToTiNdShape(uints []uint32) TiNdShape {
+	var shape TiNdShape = TiNdShape{
+		DimCount: min(16, uint32(len(uints))),
+	}
+	for i, dim := range uints {
+		if i < 16 {
+			shape.Dims[i] = dim
+		}
+	}
+	return shape
+}
+
 // TiNdArray N维数组
 type TiNdArray struct {
 	Memory    TiMemory

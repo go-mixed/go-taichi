@@ -5,7 +5,6 @@ package c_api
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"syscall"
@@ -32,10 +31,12 @@ func Initialized() bool {
 //   - macOS: libtaichi_c_api.dylib
 //
 // Must set before use: CGO_ENABLED=0
-func Init(libDir string) error {
+func Init() error {
 	// Determine library filename
 	var libName string
+	// 添加/osName
 
+	libDir := os.Getenv("TI_LIB_DIR")
 	switch runtime.GOOS {
 	case "windows":
 		libName = "taichi_c_api.dll"
@@ -47,16 +48,10 @@ func Init(libDir string) error {
 		return fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
 
-	// Use specified directory
 	libPath := filepath.Join(libDir, libName)
 
-	// If not found, search in PATH
 	if _, err := os.Stat(libPath); err != nil {
-		// Search in system PATH
-		libPath, err = exec.LookPath(libName)
-		if err != nil {
-			return fmt.Errorf("%s not found in system environment \"PATH\": %w", libName, err)
-		}
+		return fmt.Errorf("TI_LIB_DIR environment variable is required: \"%s\" does not contain a valid taichi library. (%s, *.bc must be in the TI_LIB_DIR directory)", libDir, libName)
 	}
 
 	// Load library file
@@ -64,7 +59,10 @@ func Init(libDir string) error {
 
 	switch runtime.GOOS {
 	case "windows":
-		// Windows uses syscall.LoadLibrary
+		// Windows: set TI_LIB_DIR BEFORE loading DLL
+		//if err := setLibEnv(libDir); err != nil {
+		//	return fmt.Errorf("failed to set TI_LIB_DIR: %w", err)
+		//}
 		h, err := syscall.LoadLibrary(libPath)
 		if err != nil {
 			return fmt.Errorf("failed to load library: %w (path: %s)", err, libPath)

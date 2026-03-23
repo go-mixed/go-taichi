@@ -6,8 +6,8 @@ import (
 
 // initial initializes Taichi
 // Must be called before using any other functionality
-func initial(libDir string) error {
-	return c_api.Init(libDir)
+func initial() error {
+	return c_api.Init()
 }
 
 // GetVersion gets the Taichi C-API version
