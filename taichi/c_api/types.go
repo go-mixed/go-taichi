@@ -16,11 +16,13 @@ package c_api
 // ===== 基础类型定义 =====
 
 // TiBool 布尔类型
+// taichi_core.h:246
 //
 // 可以是TI_TRUE或TI_FALSE,使用其他值会导致未定义行为。
 type TiBool uint32
 
 // TiFlags 标志位字段
+// taichi_core.h:266
 //
 // 用于表示32个正交标志的位字段。
 type TiFlags uint32
@@ -28,37 +30,44 @@ type TiFlags uint32
 // ===== 句柄类型 =====
 
 // TiRuntime Taichi运行时句柄
+// taichi_core.h:280
 //
 // 表示逻辑后端及其内部动态状态的实例。
 // 用户负责同步对TiRuntime的任何使用,不能在同一线程中操作多个TiRuntime。
 type TiRuntime uintptr
 
 // TiAotModule AOT模块句柄
+// taichi_core.h:286
 //
 // 提前编译的Taichi模块,包含kernel和compute graph的集合。
 type TiAotModule uintptr
 
 // TiMemory 内存句柄
+// taichi_core.h:291
 //
 // 设备内存的连续分配。
 type TiMemory uintptr
 
 // TiImage 图像句柄
+// taichi_core.h:296
 //
 // 设备图像的连续分配。
 type TiImage uintptr
 
 // TiSampler 采样器句柄
+// taichi_core.h:303
 //
 // 图像采样器。TI_NULL_HANDLE表示运行时提供的默认采样器。
 type TiSampler uintptr
 
 // TiKernel 内核句柄
+// taichi_core.h:308
 //
 // 可在目标设备上执行的Taichi kernel。
 type TiKernel uintptr
 
 // TiComputeGraph 计算图句柄
+// taichi_core.h:314
 //
 // 按预定义顺序在目标设备上启动的Taichi kernel集合。
 type TiComputeGraph uintptr
@@ -82,6 +91,7 @@ const (
 // ===== 错误码 =====
 
 // TiError Taichi C-API报告的错误
+// taichi_core.h:319-353
 type TiError int32
 
 const (
@@ -125,6 +135,7 @@ const (
 // ===== 架构类型 =====
 
 // TiArch 后端架构类型
+// taichi_core.h:358-375
 type TiArch uint32
 
 const (
@@ -156,6 +167,7 @@ const (
 // ===== 数据类型 =====
 
 // TiDataType 基本(原始)数据类型
+// taichi_core.h:423-450
 type TiDataType uint32
 
 const (
@@ -205,6 +217,7 @@ const (
 // ===== 参数类型 =====
 
 // TiArgumentType kernel和compute graph参数类型
+// taichi_core.h:455-469
 type TiArgumentType uint32
 
 const (
@@ -230,6 +243,7 @@ const (
 // ===== 图像相关类型 =====
 
 // TiImageDimension 图像维度
+// taichi_core.h:562-577
 type TiImageDimension uint32
 
 const (
@@ -240,6 +254,7 @@ const (
 )
 
 // TiImageLayout 图像布局
+// taichi_core.h:580-605
 type TiImageLayout uint32
 
 const (
@@ -255,6 +270,7 @@ const (
 )
 
 // TiFormat 纹理格式
+// taichi_core.h:611-657
 type TiFormat uint32
 
 const (
@@ -305,6 +321,7 @@ const (
 )
 
 // TiImageExtent 图像尺寸
+// taichi_core.h:684-702
 type TiImageExtent struct {
 	Width           uint32
 	Height          uint32
@@ -313,6 +330,7 @@ type TiImageExtent struct {
 }
 
 // TiImageUsageFlags 图像用途标志
+// taichi_core.h:548-556
 type TiImageUsageFlags uint32
 
 const (
@@ -322,6 +340,7 @@ const (
 )
 
 // TiImageAllocateInfo 图像分配信息
+// taichi_core.h:707-722
 type TiImageAllocateInfo struct {
 	Dimension     TiImageDimension
 	Extent        TiImageExtent
@@ -332,6 +351,7 @@ type TiImageAllocateInfo struct {
 }
 
 // TiFilter 过滤模式
+// taichi_core.h:740-744
 type TiFilter uint32
 
 const (
@@ -340,6 +360,7 @@ const (
 )
 
 // TiAddressMode 寻址模式
+// taichi_core.h:747-752
 type TiAddressMode uint32
 
 const (
@@ -349,6 +370,7 @@ const (
 )
 
 // TiSamplerCreateInfo 采样器创建信息
+// taichi_core.h:755-760
 type TiSamplerCreateInfo struct {
 	MagFilter     TiFilter
 	MinFilter     TiFilter
@@ -357,6 +379,7 @@ type TiSamplerCreateInfo struct {
 }
 
 // TiMemoryAllocateInfo 内存分配信息
+// taichi_core.h:490-503
 type TiMemoryAllocateInfo struct {
 	Size      uint64
 	HostWrite TiBool
@@ -366,6 +389,7 @@ type TiMemoryAllocateInfo struct {
 }
 
 // TiMemoryUsageFlags 内存用途标志
+// taichi_core.h:475-484
 type TiMemoryUsageFlags uint32
 
 const (
@@ -378,12 +402,14 @@ const (
 // ===== 复合结构体定义 =====
 
 // TiArgumentValue Argument值的联合体
+// taichi_core.h:840-855
 // C中是union，最大成员是TiNdArray (152 bytes)
 type TiArgumentValue struct {
 	Data [152]byte // 与C union的实际大小匹配
 }
 
 // TiArgument Kernel参数
+// taichi_core.h:860-865
 type TiArgument struct {
 	Type  TiArgumentType  // 4 bytes, offset 0
 	_     [4]byte         // padding，确保 Value 在 offset 8
@@ -391,12 +417,14 @@ type TiArgument struct {
 }
 
 // TiNamedArgument 命名参数（用于Compute Graph）
+// taichi_core.h:870-875
 type TiNamedArgument struct {
 	Name     *byte
 	Argument TiArgument
 }
 
 // TiNdShape N维形状
+// taichi_core.h:522-527
 type TiNdShape struct {
 	DimCount uint32
 	Dims     [16]uint32
@@ -415,6 +443,7 @@ func ToTiNdShape(uints []uint32) TiNdShape {
 }
 
 // TiNdArray N维数组
+// taichi_core.h:532-542
 type TiNdArray struct {
 	Memory    TiMemory
 	Shape     TiNdShape
@@ -423,6 +452,7 @@ type TiNdArray struct {
 }
 
 // TiTexture 纹理
+// taichi_core.h:765-777
 type TiTexture struct {
 	Image     TiImage
 	Sampler   TiSampler
@@ -432,6 +462,7 @@ type TiTexture struct {
 }
 
 // TiMemorySlice 内存切片
+// taichi_core.h:509-516
 type TiMemorySlice struct {
 	Memory TiMemory
 	Offset uint64
@@ -439,6 +470,7 @@ type TiMemorySlice struct {
 }
 
 // TiImageSlice 图像切片
+// taichi_core.h:728-737
 type TiImageSlice struct {
 	Image    TiImage
 	Offset   TiImageOffset
@@ -447,6 +479,7 @@ type TiImageSlice struct {
 }
 
 // TiImageOffset 图像偏移
+// taichi_core.h:662-679
 type TiImageOffset struct {
 	X                uint32
 	Y                uint32
@@ -455,12 +488,38 @@ type TiImageOffset struct {
 }
 
 // TiScalar 标量值
+// taichi_core.h:802-805
 type TiScalar struct {
 	Type  TiDataType
 	Value TiScalarValue
 }
 
 // TiScalarValue 标量值（联合体）
+// taichi_core.h:788-797
 type TiScalarValue struct {
 	Data [8]byte
+}
+
+// TiTensorValue 张量值（联合体）
+// taichi_core.h:810-819
+type TiTensorValue struct {
+	Data [128]byte
+}
+
+// TiTensorValueWithLength 带长度信息的张量值
+// taichi_core.h:824-827
+// C 中需要 8 字节对齐（因为 TiTensorValue 包含 uint64_t）
+type TiTensorValueWithLength struct {
+	Length uint32
+	_      [4]byte // padding for 8-byte alignment of Data
+	Data   TiTensorValue
+}
+
+// TiTensor 类型化张量值
+// taichi_core.h:832-835
+// C 中需要 8 字节对齐（因为 Contents 需要 8 字节对齐）
+type TiTensor struct {
+	Type     TiDataType
+	_        [4]byte // padding for 8-byte alignment of Contents
+	Contents TiTensorValueWithLength
 }

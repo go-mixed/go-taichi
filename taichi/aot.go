@@ -90,12 +90,10 @@ func extractTCMToDir(tcmData []byte, useCache bool) (string, error) {
 
 	if useCache {
 		// Use md5 as directory name for deterministic caching
-		hash := md5.Sum(tcmData)
-		hashStr := fmt.Sprintf("%x", hash)
-		tempDir = filepath.Join(os.TempDir(), fmt.Sprintf("taichi_tcm_%s", hashStr))
+		tempDir = filepath.Join(os.TempDir(), fmt.Sprintf("taichi_tcm_%x", md5.Sum(tcmData)))
 
 		// Check if cached directory already exists
-		if _, statErr := os.Stat(tempDir); statErr == nil {
+		if s, statErr := os.Stat(tempDir); statErr == nil && s.IsDir() {
 			// Directory exists, reuse it
 			return tempDir, nil
 		}
@@ -278,6 +276,34 @@ func (kl *KernelLauncher) ArgNdArray(arr *NdArray) *KernelLauncher {
 	return kl
 }
 
+// ArgVectorInt32 adds an int32 vector argument
+func (kl *KernelLauncher) ArgVectorInt32(values ...int32) *KernelLauncher {
+	arg := c_api.NewArgumentTensorI32(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorFloat32 adds a float32 vector argument
+func (kl *KernelLauncher) ArgVectorFloat32(values ...float32) *KernelLauncher {
+	arg := c_api.NewArgumentTensorF32(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorInt64 adds an int64 vector argument
+func (kl *KernelLauncher) ArgVectorInt64(values ...int64) *KernelLauncher {
+	arg := c_api.NewArgumentTensorI64(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorFloat64 adds a float64 vector argument
+func (kl *KernelLauncher) ArgVectorFloat64(values ...float64) *KernelLauncher {
+	arg := c_api.NewArgumentTensorF64(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
 // Run executes the kernel and waits for completion
 func (kl *KernelLauncher) Run() {
 	c_api.LaunchKernel(kl.kernel.runtime.handle, kl.kernel.handle, kl.args)
@@ -390,6 +416,54 @@ func (gl *GraphLauncher) ArgNdArray(name string, arr *NdArray) *GraphLauncher {
 	}
 
 	arg := c_api.NewArgumentNdArray(ndarray)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorInt32 adds an int32 vector named argument
+func (gl *GraphLauncher) ArgVectorInt32(name string, values []int32) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorI32(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorFloat32 adds a float32 vector named argument
+func (gl *GraphLauncher) ArgVectorFloat32(name string, values []float32) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorF32(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorInt64 adds an int64 vector named argument
+func (gl *GraphLauncher) ArgVectorInt64(name string, values []int64) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorI64(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorFloat64 adds a float64 vector named argument
+func (gl *GraphLauncher) ArgVectorFloat64(name string, values []float64) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorF64(values)
 	namedArg := c_api.TiNamedArgument{
 		Name:     &nameBytes[0],
 		Argument: arg,
