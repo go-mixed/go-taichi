@@ -48,7 +48,7 @@ Taichi C-API internal backends require runtime files which **must be located in 
            ├── libMoltenVK.dylib
            └── runtime_arm64.bc
    ```
-   - download "runtime.7z" from [Taichi GitHub Release](https://github.com/taichi-dev/taichi/releases) , and extract it to your project directory. 
+   - download "runtime.7z" from [Taichi GitHub Release](https://github.com/go-mixed/go-taichi/releases) , and extract it to your project directory. 
    - Keep only the relevant directory for your operating system
 
 2. **Set TI_LIB_DIR environment variable** (required for all backends):

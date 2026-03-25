@@ -2,7 +2,7 @@ package c_api
 
 import (
 	"encoding/binary"
-	"unsafe"
+	"math"
 )
 
 // tensorToBytes converts a slice to []byte for memory copying
@@ -24,7 +24,7 @@ func tensorToBytes(slice any) []byte {
 func tensorToBytesFloat32(data []float32) []byte {
 	result := make([]byte, len(data)*4)
 	for i, v := range data {
-		binary.LittleEndian.PutUint32(result[i*4:i*4+4], float32Bits(v))
+		binary.LittleEndian.PutUint32(result[i*4:i*4+4], math.Float32bits(v))
 	}
 	return result
 }
@@ -40,7 +40,7 @@ func tensorToBytesInt32(data []int32) []byte {
 func tensorToBytesFloat64(data []float64) []byte {
 	result := make([]byte, len(data)*8)
 	for i, v := range data {
-		binary.LittleEndian.PutUint64(result[i*8:i*8+8], float64Bits(v))
+		binary.LittleEndian.PutUint64(result[i*8:i*8+8], math.Float64bits(v))
 	}
 	return result
 }
@@ -51,14 +51,4 @@ func tensorToBytesInt64(data []int64) []byte {
 		binary.LittleEndian.PutUint64(result[i*8:i*8+8], uint64(v))
 	}
 	return result
-}
-
-// float32Bits returns the uint32 representation of a float32
-func float32Bits(f float32) uint32 {
-	return *(*uint32)(unsafe.Pointer(&f))
-}
-
-// float64Bits returns the uint64 representation of a float64
-func float64Bits(f float64) uint64 {
-	return *(*uint64)(unsafe.Pointer(&f))
 }
