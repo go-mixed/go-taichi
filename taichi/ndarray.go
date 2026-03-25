@@ -93,6 +93,39 @@ func (arr *NdArray) Ndim() int {
 	return len(arr.shape)
 }
 
+// GetOffset gets the element indices at the given shape indices
+// For 2D array with shape [width, height] and elementShape [4] (vec4):
+//   - base = (x*height + y) * 4
+//   - returns [base, base+1, base+2, base+3]
+//
+// If shapeIndices has fewer elements, pad with zeros; if more, ignore extras
+func (arr *NdArray) GetOffset(shapeIndices ...int) (offset int, elementSize int) {
+	// Pad shapeIndices with zeros if shorter than shape
+	indices := make([]int, len(arr.shape))
+	copy(indices, shapeIndices)
+
+	// Calculate base index in row-major order
+	base := 0
+	for i, idx := range indices {
+		// stride[i] = product of shape[i+1:]
+		stride := 1
+		for j := i + 1; j < len(arr.shape); j++ {
+			stride *= int(arr.shape[j])
+		}
+		base += idx * stride
+	}
+
+	// Multiply by element count (e.g., 4 for vec4)
+	elemCount := 1
+	for _, dim := range arr.elemShape {
+		elemCount *= int(dim)
+	}
+
+	base *= elemCount
+
+	return base, elemCount
+}
+
 // TotalElements gets the total number of elements (including elemShape)
 func (arr *NdArray) TotalElements() uint64 {
 	total := uint64(1)
