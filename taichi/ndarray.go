@@ -158,34 +158,6 @@ func (arr *NdArray) MapFloat32(f func(data []float32) error) error {
 	}, arr)
 }
 
-func (arr *NdArray) MapInt64(f func(data []int64) error) error {
-	return MapNdArray(func(datas ...NdArrayPtr) error {
-		data := datas[0].AsInt64()
-		return f(data)
-	}, arr)
-}
-
-func (arr *NdArray) MapUint64(f func(data []uint64) error) error {
-	return MapNdArray(func(datas ...NdArrayPtr) error {
-		data := datas[0].AsUint64()
-		return f(data)
-	}, arr)
-}
-
-func (arr *NdArray) MapUint32(f func(data []uint32) error) error {
-	return MapNdArray(func(datas ...NdArrayPtr) error {
-		data := datas[0].AsUint32()
-		return f(data)
-	}, arr)
-}
-
-func (arr *NdArray) MapInt32(f func(data []int32) error) error {
-	return MapNdArray(func(datas ...NdArrayPtr) error {
-		data := datas[0].AsInt32()
-		return f(data)
-	}, arr)
-}
-
 func (arr *NdArray) MapFloat64(f func(data []float64) error) error {
 	return MapNdArray(func(datas ...NdArrayPtr) error {
 		data := datas[0].AsFloat64()
@@ -200,13 +172,6 @@ func (arr *NdArray) MapInt8(f func(data []int8) error) error {
 	}, arr)
 }
 
-func (arr *NdArray) MapInt16(f func(data []int16) error) error {
-	return MapNdArray(func(datas ...NdArrayPtr) error {
-		data := datas[0].AsInt16()
-		return f(data)
-	}, arr)
-}
-
 func (arr *NdArray) MapUint8(f func(data []uint8) error) error {
 	return MapNdArray(func(datas ...NdArrayPtr) error {
 		data := datas[0].AsUInt8()
@@ -214,25 +179,46 @@ func (arr *NdArray) MapUint8(f func(data []uint8) error) error {
 	}, arr)
 }
 
-func (arr *NdArray) MapUInt16(f func(data []uint16) error) error {
+func (arr *NdArray) MapInt16(f func(data []int16) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsInt16()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUint16(f func(data []uint16) error) error {
 	return MapNdArray(func(datas ...NdArrayPtr) error {
 		data := datas[0].AsUInt16()
 		return f(data)
 	}, arr)
 }
 
-func (arr *NdArray) MapUInt32(f func(data []uint32) error) error {
+func (arr *NdArray) MapInt32(f func(data []int32) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsInt32()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUint32(f func(data []uint32) error) error {
 	return MapNdArray(func(datas ...NdArrayPtr) error {
 		data := datas[0].AsUint32()
 		return f(data)
 	}, arr)
 }
 
-func (arr *NdArray) MapUInt64(f func(data []uint64) error) error {
+func (arr *NdArray) MapInt64(f func(data []int64) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsInt64()
+		return f(data)
+	}, arr)
+}
+
+func (arr *NdArray) MapUint64(f func(data []uint64) error) error {
 	return MapNdArray(func(datas ...NdArrayPtr) error {
 		data := datas[0].AsUint64()
 		return f(data)
-	})
+	}, arr)
 }
 
 type NdArrayPtr struct {
@@ -285,13 +271,6 @@ func (p NdArrayPtr) AsInt32() []int32 {
 func MapNdArray(fn func(arrays ...NdArrayPtr) error, arrays ...*NdArray) error {
 	if len(arrays) == 0 {
 		return fmt.Errorf("no arrays provided")
-	}
-
-	// Validate all arrays are float32 type
-	for _, arr := range arrays {
-		if arr.elemType != DataTypeF32 {
-			return fmt.Errorf("array type is not float32")
-		}
 	}
 
 	// Extract memories
