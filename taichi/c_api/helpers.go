@@ -2,6 +2,8 @@ package c_api
 
 import (
 	"unsafe"
+
+	"github.com/go-mixed/go-taichi/f16"
 )
 
 // ===== Argument Construction Helper Functions =====
@@ -147,6 +149,131 @@ func NewArgumentTensor(tensor TiTensor) TiArgument {
 	return arg
 }
 
+// NewArgumentTensorI8 creates an int8 tensor argument from a slice
+//
+// Parameters:
+//   - data: []int8 slice
+//
+// Returns:
+//   - TiArgument
+//
+// Example:
+//
+//	data := []int8{1, 2, 3, 4}
+//	arg := taichi.NewArgumentTensorI8(data)
+func NewArgumentTensorI8(data []int8) TiArgument {
+	tensor := TiTensor{
+		Type: TI_DATA_TYPE_I8,
+		Contents: TiTensorValueWithLength{
+			Length: uint32(len(data)),
+		},
+	}
+	if len(data) > 0 {
+		copy(tensor.Contents.Data.Data[:len(data)*1], tensorToBytes(data))
+	}
+	return NewArgumentTensor(tensor)
+}
+
+// NewArgumentTensorU8 creates an uint8 tensor argument from a slice
+//
+// Parameters:
+//   - data: []uint8 slice
+//
+// Returns:
+//   - TiArgument
+//
+// Example:
+//
+//	data := []uint8{1, 2, 3, 4}
+//	arg := taichi.NewArgumentTensorU8(data)
+func NewArgumentTensorU8(data []uint8) TiArgument {
+	tensor := TiTensor{
+		Type: TI_DATA_TYPE_U8,
+		Contents: TiTensorValueWithLength{
+			Length: uint32(len(data)),
+		},
+	}
+	if len(data) > 0 {
+		copy(tensor.Contents.Data.Data[:len(data)*1], tensorToBytes(data))
+	}
+	return NewArgumentTensor(tensor)
+}
+
+// NewArgumentTensorF16 creates a f16.Float16 tensor argument from a slice
+//
+// Parameters:
+//   - data: []f16.Float16 slice
+//
+// Returns:
+//   - TiArgument
+//
+// Example:
+//
+//	data := []float16{1.0, 2.0, 3.0, 4.0}
+//	arg := taichi.NewArgumentTensorF32(data)
+func NewArgumentTensorF16(data []f16.Float16) TiArgument {
+	tensor := TiTensor{
+		Type: TI_DATA_TYPE_F16,
+		Contents: TiTensorValueWithLength{
+			Length: uint32(len(data)),
+		},
+	}
+	if len(data) > 0 {
+		copy(tensor.Contents.Data.Data[:len(data)*2], tensorToBytes(data))
+	}
+	return NewArgumentTensor(tensor)
+}
+
+// NewArgumentTensorI16 creates an int16 tensor argument from a slice
+//
+// Parameters:
+//   - data: []int16 slice
+//
+// Returns:
+//   - TiArgument
+//
+// Example:
+//
+//	data := []int16{1, 2, 3, 4}
+//	arg := taichi.NewArgumentTensorI16(data)
+func NewArgumentTensorI16(data []int16) TiArgument {
+	tensor := TiTensor{
+		Type: TI_DATA_TYPE_I16,
+		Contents: TiTensorValueWithLength{
+			Length: uint32(len(data)),
+		},
+	}
+	if len(data) > 0 {
+		copy(tensor.Contents.Data.Data[:len(data)*2], tensorToBytes(data))
+	}
+	return NewArgumentTensor(tensor)
+}
+
+// NewArgumentTensorU16 creates an uint16 tensor argument from a slice
+//
+// Parameters:
+//   - data: []uint16 slice
+//
+// Returns:
+//   - TiArgument
+//
+// Example:
+//
+//	data := []uint16{1, 2, 3, 4}
+//	arg := taichi.NewArgumentTensorU16(data)
+func NewArgumentTensorU16(data []uint16) TiArgument {
+	tensor := TiTensor{
+		Type: TI_DATA_TYPE_U16,
+		Contents: TiTensorValueWithLength{
+			Length: uint32(len(data)),
+		},
+	}
+	if len(data) > 0 {
+		copy(tensor.Contents.Data.Data[:len(data)*2], tensorToBytes(data))
+	}
+	return NewArgumentTensor(tensor)
+}
+
 // NewArgumentTensorF32 creates a float32 tensor argument from a slice
 //
 // Parameters:
@@ -197,6 +324,31 @@ func NewArgumentTensorI32(data []int32) TiArgument {
 	return NewArgumentTensor(tensor)
 }
 
+// NewArgumentTensorU32 creates an uint32 tensor argument from a slice
+//
+// Parameters:
+//   - data: []uint32 slice
+//
+// Returns:
+//   - TiArgument
+//
+// Example:
+//
+//	data := []uint32{1, 2, 3, 4}
+//	arg := taichi.NewArgumentTensorU32(data)
+func NewArgumentTensorU32(data []uint32) TiArgument {
+	tensor := TiTensor{
+		Type: TI_DATA_TYPE_U32,
+		Contents: TiTensorValueWithLength{
+			Length: uint32(len(data)),
+		},
+	}
+	if len(data) > 0 {
+		copy(tensor.Contents.Data.Data[:len(data)*4], tensorToBytes(data))
+	}
+	return NewArgumentTensor(tensor)
+}
+
 // NewArgumentTensorF64 creates a float64 tensor argument from a slice
 //
 // Parameters:
@@ -237,6 +389,31 @@ func NewArgumentTensorF64(data []float64) TiArgument {
 func NewArgumentTensorI64(data []int64) TiArgument {
 	tensor := TiTensor{
 		Type: TI_DATA_TYPE_I64,
+		Contents: TiTensorValueWithLength{
+			Length: uint32(len(data)),
+		},
+	}
+	if len(data) > 0 {
+		copy(tensor.Contents.Data.Data[:len(data)*8], tensorToBytes(data))
+	}
+	return NewArgumentTensor(tensor)
+}
+
+// NewArgumentTensorU64 creates an uint64 tensor argument from a slice
+//
+// Parameters:
+//   - data: []uint64 slice
+//
+// Returns:
+//   - TiArgument
+//
+// Example:
+//
+//	data := []uint64{1, 2, 3, 4}
+//	arg := taichi.NewArgumentTensorU64(data)
+func NewArgumentTensorU64(data []uint64) TiArgument {
+	tensor := TiTensor{
+		Type: TI_DATA_TYPE_U64,
 		Contents: TiTensorValueWithLength{
 			Length: uint32(len(data)),
 		},

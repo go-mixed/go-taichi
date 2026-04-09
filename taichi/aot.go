@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"unsafe"
 
+	"github.com/go-mixed/go-taichi/f16"
 	"github.com/go-mixed/go-taichi/taichi/c_api"
 )
 
@@ -276,9 +277,51 @@ func (kl *KernelLauncher) ArgNdArray(arr *NdArray) *KernelLauncher {
 	return kl
 }
 
+// ArgVectorInt8 adds an int8 vector argument
+func (kl *KernelLauncher) ArgVectorInt8(values ...int8) *KernelLauncher {
+	arg := c_api.NewArgumentTensorI8(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorUint8 adds an uint8 vector argument
+func (kl *KernelLauncher) ArgVectorUint8(values ...uint8) *KernelLauncher {
+	arg := c_api.NewArgumentTensorU8(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorInt16 adds an int16 vector argument
+func (kl *KernelLauncher) ArgVectorInt16(values ...int16) *KernelLauncher {
+	arg := c_api.NewArgumentTensorI16(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorUint16 adds an uint16 vector argument
+func (kl *KernelLauncher) ArgVectorUint16(values ...uint16) *KernelLauncher {
+	arg := c_api.NewArgumentTensorU16(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorFloat16 adds a float32 vector argument
+func (kl *KernelLauncher) ArgVectorFloat16(values ...f16.Float16) *KernelLauncher {
+	arg := c_api.NewArgumentTensorF16(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
 // ArgVectorInt32 adds an int32 vector argument
 func (kl *KernelLauncher) ArgVectorInt32(values ...int32) *KernelLauncher {
 	arg := c_api.NewArgumentTensorI32(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorUint32 adds an uint32 vector argument
+func (kl *KernelLauncher) ArgVectorUint32(values ...uint32) *KernelLauncher {
+	arg := c_api.NewArgumentTensorU32(values)
 	kl.args = append(kl.args, arg)
 	return kl
 }
@@ -293,6 +336,13 @@ func (kl *KernelLauncher) ArgVectorFloat32(values ...float32) *KernelLauncher {
 // ArgVectorInt64 adds an int64 vector argument
 func (kl *KernelLauncher) ArgVectorInt64(values ...int64) *KernelLauncher {
 	arg := c_api.NewArgumentTensorI64(values)
+	kl.args = append(kl.args, arg)
+	return kl
+}
+
+// ArgVectorUint64 adds an uint64 vector argument
+func (kl *KernelLauncher) ArgVectorUint64(values ...uint64) *KernelLauncher {
+	arg := c_api.NewArgumentTensorU64(values)
 	kl.args = append(kl.args, arg)
 	return kl
 }

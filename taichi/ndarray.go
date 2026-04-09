@@ -3,6 +3,8 @@ package taichi
 import (
 	"fmt"
 	"unsafe"
+
+	"github.com/go-mixed/go-taichi/f16"
 )
 
 // NdArray N-dimensional array abstraction
@@ -151,6 +153,13 @@ func (arr *NdArray) ElemSize() int {
 	return arr.elemSize
 }
 
+func (arr *NdArray) MapFloat16(f func(data []f16.Float16) error) error {
+	return MapNdArray(func(datas ...NdArrayPtr) error {
+		data := datas[0].AsFloat16()
+		return f(data)
+	}, arr)
+}
+
 func (arr *NdArray) MapFloat32(f func(data []float32) error) error {
 	return MapNdArray(func(datas ...NdArrayPtr) error {
 		data := datas[0].AsFloat32()
@@ -264,6 +273,10 @@ func (p NdArrayPtr) AsUint64() []uint64 {
 
 func (p NdArrayPtr) AsInt32() []int32 {
 	return unsafe.Slice((*int32)(p.ptr), p.arr.TotalElements())
+}
+
+func (p NdArrayPtr) AsFloat16() []f16.Float16 {
+	return unsafe.Slice((*f16.Float16)(p.ptr), p.arr.TotalElements())
 }
 
 // MapNdArray executes fn with multiple NdArrays as NdArrayPtr
