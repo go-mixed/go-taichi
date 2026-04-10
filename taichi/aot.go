@@ -474,10 +474,82 @@ func (gl *GraphLauncher) ArgNdArray(name string, arr *NdArray) *GraphLauncher {
 	return gl
 }
 
+// ArgVectorInt8 adds an int8 vector named argument
+func (gl *GraphLauncher) ArgVectorInt8(name string, values []int8) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorI8(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorUint8 adds an uint8 vector named argument
+func (gl *GraphLauncher) ArgVectorUint8(name string, values []uint8) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorU8(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorInt16 adds an int16 vector named argument
+func (gl *GraphLauncher) ArgVectorInt16(name string, values []int16) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorI16(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorUint16 adds an uint16 vector named argument
+func (gl *GraphLauncher) ArgVectorUint16(name string, values []uint16) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorU16(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorFloat16 adds a float16 vector named argument
+func (gl *GraphLauncher) ArgVectorFloat16(name string, values []f16.Float16) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorF16(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
 // ArgVectorInt32 adds an int32 vector named argument
 func (gl *GraphLauncher) ArgVectorInt32(name string, values []int32) *GraphLauncher {
 	nameBytes := append([]byte(name), 0)
 	arg := c_api.NewArgumentTensorI32(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorUint32 adds an uint32 vector named argument
+func (gl *GraphLauncher) ArgVectorUint32(name string, values []uint32) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorU32(values)
 	namedArg := c_api.TiNamedArgument{
 		Name:     &nameBytes[0],
 		Argument: arg,
@@ -502,6 +574,18 @@ func (gl *GraphLauncher) ArgVectorFloat32(name string, values []float32) *GraphL
 func (gl *GraphLauncher) ArgVectorInt64(name string, values []int64) *GraphLauncher {
 	nameBytes := append([]byte(name), 0)
 	arg := c_api.NewArgumentTensorI64(values)
+	namedArg := c_api.TiNamedArgument{
+		Name:     &nameBytes[0],
+		Argument: arg,
+	}
+	gl.args = append(gl.args, namedArg)
+	return gl
+}
+
+// ArgVectorUint64 adds an uint64 vector named argument
+func (gl *GraphLauncher) ArgVectorUint64(name string, values []uint64) *GraphLauncher {
+	nameBytes := append([]byte(name), 0)
+	arg := c_api.NewArgumentTensorU64(values)
 	namedArg := c_api.TiNamedArgument{
 		Name:     &nameBytes[0],
 		Argument: arg,
