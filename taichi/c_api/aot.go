@@ -166,6 +166,7 @@ func LaunchKernel(runtime TiRuntime, kernel TiKernel, args []TiArgument) {
 			return
 		}
 		tiLaunchKernel(runtime, kernel, uint32(len(args)), &args[0])
+		asyncTasks.Add(1)
 	})
 
 }
@@ -195,6 +196,7 @@ func LaunchComputeGraph(runtime TiRuntime, computeGraph TiComputeGraph, args []T
 			return
 		}
 		tiLaunchComputeGraph(runtime, computeGraph, uint32(len(args)), &args[0])
+		asyncTasks.Add(1)
 	})
 
 }
@@ -227,7 +229,9 @@ func Flush(runtime TiRuntime) {
 //	taichi.Flush(runtime)
 //	taichi.Wait(runtime)
 func Wait(runtime TiRuntime) {
-	SyncCallVoid(func() {
-		tiWait(runtime)
-	})
+	if asyncTasks.Swap(0) > 0 {
+		SyncCallVoid(func() {
+			tiWait(runtime)
+		})
+	}
 }

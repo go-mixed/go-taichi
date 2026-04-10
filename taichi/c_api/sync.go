@@ -8,6 +8,7 @@ import (
 var mainThreadCh chan func() any
 var resultCh chan any
 var runtimeRunning = atomic.Bool{}
+var asyncTasks = atomic.Uint32{}
 
 func runMainThread() {
 	mainThreadCh = make(chan func() any)

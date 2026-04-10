@@ -69,6 +69,7 @@ func AllocateMemory(runtime TiRuntime, allocateInfo *TiMemoryAllocateInfo) TiMem
 func FreeMemory(runtime TiRuntime, memory TiMemory) {
 	SyncCallVoid(func() {
 		tiFreeMemory(runtime, memory)
+		asyncTasks.Add(1)
 	})
 }
 
@@ -115,6 +116,7 @@ func MapMemory(runtime TiRuntime, memory TiMemory) unsafe.Pointer {
 func UnmapMemory(runtime TiRuntime, memory TiMemory) {
 	SyncCallVoid(func() {
 		tiUnmapMemory(runtime, memory)
+		asyncTasks.Add(1)
 	})
 }
 
@@ -143,5 +145,6 @@ func UnmapMemory(runtime TiRuntime, memory TiMemory) {
 func CopyMemoryDeviceToDevice(runtime TiRuntime, dst *TiMemorySlice, src *TiMemorySlice) {
 	SyncCallVoid(func() {
 		tiCopyMemoryDeviceToDevice(runtime, dst, src)
+		asyncTasks.Add(1)
 	})
 }
